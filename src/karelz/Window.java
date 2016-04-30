@@ -1,36 +1,107 @@
 package karelz;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.imageio.ImageIO;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 @SuppressWarnings("serial")
 public class Window extends JFrame {
+	
 
 	static Window window;
 	
 	static final Cursor HAND_OPENED = createCursor(getImage("hand_opened.png"), "hand_opened");
 	static final Cursor HAND_CLOSED = createCursor(getImage("hand_closed.png"), "hand_closed");
 	
-	static final BufferedImage testImage = getImage("test.png");//TODO remove?
+	static BufferedImage testImage = getImage("test.png");//TODO remove?
+	static BufferedImage image = new BufferedImage(1425, 950, BufferedImage.TYPE_INT_RGB);
 	
+	static JViewport viewport;
+
+	static class ImagePanel extends JPanel {
+		BufferedImage image;
+		double scale;
+		
+
+		public ImagePanel(BufferedImage image) {
+			this.image = image;
+			scale = 1.0;
+			//setBackground(Color.);
+		}
+
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D)g;
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);//TODO try other types of scale modes
+			double x = (getWidth()-scale*image.getWidth())/2;
+			double y = (getHeight()-scale*image.getHeight())/2;
+			AffineTransform transform = AffineTransform.getTranslateInstance(x, y);
+			transform.scale(scale, scale);
+			g2.drawRenderedImage(image, transform);
+		}
+
+		/**
+		 * For the scroll pane.
+		 */
+		public Dimension getPreferredSize() {
+			int w = (int) (scale * image.getWidth());
+			int h = (int) (scale * image.getHeight());
+			return new Dimension(w, h);
+		}
+
+		public void setScale(Point point, double s) {
+			scale = s;
+			revalidate(); // update the scroll pane
+			repaint();
+		}
+		
+		public void zoomOut(Point point) {
+			if (scale*0.9 >= 0.01) {
+				scale*=0.9;
+			    Point viewPosition = viewport.getViewPosition();
+			    viewport.setViewPosition(new Point((int)(point.x*(0.9-1)+0.9*viewPosition.x), (int)(point.y*(0.9-1)+0.9*viewPosition.y)));
+			    revalidate();
+			    repaint();
+			}
+		}
+
+		public void zoomIn(Point point) {
+			scale*=1.1;
+			Point viewPosition = viewport.getViewPosition();
+			viewport.setViewPosition(new Point((int)(point.x*(1.1-1)+1.1*viewPosition.x), (int)(point.y*(1.1-1)+1.1*viewPosition.y)));
+		    revalidate();
+		    repaint();
+		}
+
+
+
+	}
+
 	public static void main(String[] args) {
 		window = new Window();
 		window.setVisible(true);
@@ -42,25 +113,37 @@ public class Window extends JFrame {
 		setBounds(100, 100, 1094, 714);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());} catch (Exception e) {}
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.getVerticalScrollBar().setUnitIncrement(5);
 		scrollPane.getHorizontalScrollBar().setUnitIncrement(5);
-		JViewport viewport = scrollPane.getViewport();
+		scrollPane.setWheelScrollingEnabled(false);
+		viewport = scrollPane.getViewport();
 
-		JLabel worldView = new JLabel(new ImageIcon(testImage));
-		worldView.setCursor(HAND_OPENED);
+		
+		Graphics2D graphics = image.createGraphics();
+		graphics.setStroke(new BasicStroke(5));
+		graphics.setColor(Color.WHITE);
+		graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+		graphics.drawImage(getImage("karel.png"), 500, 500, viewport);
+		graphics.setColor(Color.BLACK);
+		graphics.drawLine(0, 0, 300, 300);
+		
+		//ImagePanel worldView = new ImagePanel(testImage);
+		ImagePanel worldView = new ImagePanel(image);
+		//worldView.setCursor(HAND_OPENED);
 
 		MouseAdapter listener = new MouseAdapter() {
 
 			Point dragPoint = new Point();
 
-			public boolean isPannable(MouseEvent e) {
-				return !((JViewport)e.getSource()).getSize().equals(worldView.getSize());
+			public boolean isPannable() {
+				return !viewport.getSize().equals(worldView.getSize());
 			}
 
 			public void mouseDragged(MouseEvent e) {
-				if (isPannable(e)) {
+				if (isPannable()) {
 					if (SwingUtilities.isLeftMouseButton(e)) {
 						Point eventPoint = e.getPoint();
 						Point viewPosition = viewport.getViewPosition();
@@ -73,20 +156,33 @@ public class Window extends JFrame {
 				}
 			}
 			public void mousePressed(MouseEvent e) {
-				if (isPannable(e) && SwingUtilities.isLeftMouseButton(e)) {
+				if (isPannable() && SwingUtilities.isLeftMouseButton(e)) {
 					worldView.setCursor(HAND_CLOSED);
 					dragPoint.setLocation(e.getPoint());
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
-				if (isPannable(e) && SwingUtilities.isLeftMouseButton(e)) {
+				if (isPannable() && SwingUtilities.isLeftMouseButton(e)) {
 					worldView.setCursor(HAND_OPENED);
 				}
 			}
 			
 			public void mouseEntered(MouseEvent e) {
-				if (isPannable(e)) {
+				if (isPannable()) {
+					worldView.setCursor(HAND_OPENED);
+				}
+			}
+			
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				if (e.getModifiersEx() == 0) {//if no mouse buttons are being pressed
+					if (e.getWheelRotation() < 0) {//zoom in
+						worldView.zoomIn(e.getPoint());
+					} else if (e.getWheelRotation() > 0) {//zoom out
+						worldView.zoomOut(e.getPoint());
+					}
+				}
+				if (isPannable()) {
 					worldView.setCursor(HAND_OPENED);
 				}
 			}
@@ -94,6 +190,7 @@ public class Window extends JFrame {
 
 		viewport.addMouseListener(listener);
 		viewport.addMouseMotionListener(listener);
+		viewport.addMouseWheelListener(listener);
 		viewport.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				if (viewport.getSize().equals(worldView.getSize())) {
