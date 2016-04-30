@@ -17,6 +17,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -34,6 +35,12 @@ public class Window extends JFrame {
 	
 
 	static Window window;
+	static World world;
+	
+	static final int SCREEN_WIDTH = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+	static final int SCREEN_HEIGHT = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+	
+	static final int CELL_SIZE = 30;
 	
 	static final Cursor HAND_OPENED = createCursor(getImage("hand_opened.png"), "hand_opened");
 	static final Cursor HAND_CLOSED = createCursor(getImage("hand_closed.png"), "hand_closed");
@@ -54,10 +61,12 @@ public class Window extends JFrame {
 			//setBackground(Color.);
 		}
 
-		protected void paintComponent(Graphics g) {
+		protected void paintComponent(Graphics g) {//TODO fix flickering when zooming
 			super.paintComponent(g);
+			image = getWorldImage(Math.min(10, Math.max(1, (int)((1d/scale)*10d))), new World(10, 10));
+			image = getWorldImage(1, new World(10, 10));
 			Graphics2D g2 = (Graphics2D)g;
-			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);//TODO try other types of scale modes
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			double x = (getWidth()-scale*image.getWidth())/2;
 			double y = (getHeight()-scale*image.getHeight())/2;
 			AffineTransform transform = AffineTransform.getTranslateInstance(x, y);
@@ -69,9 +78,7 @@ public class Window extends JFrame {
 		 * For the scroll pane.
 		 */
 		public Dimension getPreferredSize() {
-			int w = (int) (scale * image.getWidth());
-			int h = (int) (scale * image.getHeight());
-			return new Dimension(w, h);
+			return new Dimension((int)(scale*image.getWidth()), (int)(scale*image.getHeight()));
 		}
 
 		public void setScale(Point point, double s) {
@@ -120,18 +127,20 @@ public class Window extends JFrame {
 		scrollPane.getHorizontalScrollBar().setUnitIncrement(5);
 		scrollPane.setWheelScrollingEnabled(false);
 		viewport = scrollPane.getViewport();
+		//viewport.setBackground(Color.WHITE);
+		//viewport.getGraphics().fillRect(0, 0, viewport.getWidth(), viewport.getHeight());
 
 		
-		Graphics2D graphics = image.createGraphics();
-		graphics.setStroke(new BasicStroke(5));
-		graphics.setColor(Color.WHITE);
-		graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
-		graphics.drawImage(getImage("karel.png"), 500, 500, viewport);
-		graphics.setColor(Color.BLACK);
-		graphics.drawLine(0, 0, 300, 300);
+		//Graphics2D graphics = image.createGraphics();
+		//graphics.setStroke(new BasicStroke(10));
+		//graphics.setColor(Color.WHITE);
+		//graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+		//graphics.drawImage(getImage("karel.png"), 500, 500, viewport);
+		//graphics.setColor(Color.BLACK);
+		//graphics.drawLine(0, 0, 300, 300);
 		
 		//ImagePanel worldView = new ImagePanel(testImage);
-		ImagePanel worldView = new ImagePanel(image);
+		ImagePanel worldView = new ImagePanel(getWorldImage(10, new World(10,10)));
 		//worldView.setCursor(HAND_OPENED);
 
 		MouseAdapter listener = new MouseAdapter() {
@@ -218,6 +227,25 @@ public class Window extends JFrame {
 
 		getContentPane().setLayout(groupLayout);
 
+	}
+	
+	public static BufferedImage getWorldImage(int stroke, World world) {
+		BufferedImage image = new BufferedImage(Math.min((world.width*CELL_SIZE),SCREEN_WIDTH), Math.min((world.height*CELL_SIZE),SCREEN_HEIGHT), BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = image.createGraphics();
+		//graphics.setBackground(world.backgroundColor);
+		//System.out.println(stroke);
+		graphics.setStroke(new BasicStroke(stroke));
+		graphics.setColor(world.backgroundColor);
+		graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+		graphics.setColor(world.lineColor);
+		//graphics.drawLine(0, 0, 0, image.getHeight()-1);
+		//
+		for (int i = 0; i < world.width; i++) {
+			graphics.drawLine(i*CELL_SIZE, 0, i*CELL_SIZE, image.getHeight()-1);
+		}
+		graphics.drawLine(image.getWidth()-1, 0, image.getWidth()-1, image.getHeight()-1);
+		return image;
+		
 	}
 	
 	public static BufferedImage getImage(String filename) {
