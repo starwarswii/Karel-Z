@@ -9,6 +9,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
+
 import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -46,44 +48,46 @@ public class Window extends JFrame {
 		scrollPane.getHorizontalScrollBar().setUnitIncrement(5);
 		JViewport viewport = scrollPane.getViewport();
 
-		JLabel label = new JLabel(new ImageIcon(testImage));
-		label.setCursor(HAND_OPENED);
+		JLabel worldView = new JLabel(new ImageIcon(testImage));
+		worldView.setCursor(HAND_OPENED);
 
 		MouseAdapter listener = new MouseAdapter() {
 
 			Point dragPoint = new Point();
 
 			public boolean isPannable(MouseEvent e) {
-				return !((JViewport)e.getSource()).getSize().equals(label.getSize());
+				return !((JViewport)e.getSource()).getSize().equals(worldView.getSize());
 			}
 
 			public void mouseDragged(MouseEvent e) {
 				if (isPannable(e)) {
-					Point eventPoint = e.getPoint();
-					Point viewPosition = viewport.getViewPosition();
-					viewPosition.translate(dragPoint.x-eventPoint.x, dragPoint.y-eventPoint.y);
-					((JComponent)viewport.getView()).scrollRectToVisible(new Rectangle(viewPosition, viewport.getSize()));
-					dragPoint.setLocation(eventPoint);
+					if (SwingUtilities.isLeftMouseButton(e)) {
+						Point eventPoint = e.getPoint();
+						Point viewPosition = viewport.getViewPosition();
+						viewPosition.translate(dragPoint.x-eventPoint.x, dragPoint.y-eventPoint.y);
+						((JComponent)viewport.getView()).scrollRectToVisible(new Rectangle(viewPosition, viewport.getSize()));
+						dragPoint.setLocation(eventPoint);
+					}
 				} else {
-					label.setCursor(Cursor.getDefaultCursor());
+					worldView.setCursor(Cursor.getDefaultCursor());
 				}
 			}
 			public void mousePressed(MouseEvent e) {
-				if (isPannable(e)) {
-					label.setCursor(HAND_CLOSED);
+				if (isPannable(e) && SwingUtilities.isLeftMouseButton(e)) {
+					worldView.setCursor(HAND_CLOSED);
 					dragPoint.setLocation(e.getPoint());
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
-				if (isPannable(e)) {
-					label.setCursor(HAND_OPENED);
+				if (isPannable(e) && SwingUtilities.isLeftMouseButton(e)) {
+					worldView.setCursor(HAND_OPENED);
 				}
 			}
 			
 			public void mouseEntered(MouseEvent e) {
 				if (isPannable(e)) {
-					label.setCursor(HAND_OPENED);
+					worldView.setCursor(HAND_OPENED);
 				}
 			}
 		};
@@ -92,12 +96,12 @@ public class Window extends JFrame {
 		viewport.addMouseMotionListener(listener);
 		viewport.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				if (viewport.getSize().equals(label.getSize())) {
-					label.setCursor(Cursor.getDefaultCursor());
+				if (viewport.getSize().equals(worldView.getSize())) {
+					worldView.setCursor(Cursor.getDefaultCursor());
 				}
 			}
 		});
-		scrollPane.setViewportView(label);
+		scrollPane.setViewportView(worldView);
 
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
