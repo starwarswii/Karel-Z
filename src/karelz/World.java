@@ -32,7 +32,8 @@ public class World {
 	}
 	
 	public void addObject(WorldObject object, int x, int y) {
-		map.put(new Point(x, y), object);
+		map.putIfAbsent(new Point(x, y), object);
+		
 	}
 	
 	public WorldObject getObjectAt(int x, int y) {
