@@ -13,26 +13,28 @@ public class World {
 	int height;
 	Color wallColor;
 	Color beeperColor;
+	Color beeperLabelColor;
 	Color lineColor;
 	Color backgroundColor;
 
-	public World(int width, int height, Color wallColor, Color beeperColor, Color lineColor, Color backgroundColor) {
+	public World(int width, int height, Color wallColor, Color beeperColor, Color beeperLabelColor, Color lineColor, Color backgroundColor) {
 		map = new HashMap<Point,WorldObject>();
 		robots = new ArrayList<Robot>();
 		this.width = width;
 		this.height = height;
 		this.wallColor = wallColor;
 		this.beeperColor = beeperColor;
+		this.beeperLabelColor = beeperLabelColor;
 		this.lineColor = lineColor;
 		this.backgroundColor = backgroundColor;
 	}
 	
 	public World(int width, int height) {
-		this(width, height, Color.BLACK, Color.BLACK, Color.BLACK, Color.WHITE);//default color values
+		this(width, height, Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.WHITE);//default color values
 	}
 	
 	public void addObject(WorldObject object, int x, int y) {
-		map.putIfAbsent(new Point(x, y), object);
+		map.put(new Point(x, y), object);
 		
 	}
 	
