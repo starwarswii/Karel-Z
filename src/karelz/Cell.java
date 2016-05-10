@@ -2,12 +2,13 @@ package karelz;
 
 import java.util.Objects;
 
+//although there is nothing prohibiting it, by convention a cell should hold (nothing) OR (any combination of beeper pile, horizontal wall, and vertical wall), OR (only block wall)
 public class Cell {
 	
 	static final int INFINITY = -1;
 	
 	static final int NO_MASK = 0;
-	static final int BEEPER_MASK = 1 << 0;
+	static final int BEEPER_PILE_MASK = 1 << 0;
 	static final int HORIZONTAL_WALL_MASK = 1 << 1;
 	static final int VERTICAL_WALL_MASK = 1 << 2;
 	static final int BLOCK_WALL_MASK = 1 << 3;
@@ -33,7 +34,7 @@ public class Cell {
 	}
 	
 	public static Cell newBeeperPile(int count) {
-		return new Cell(BEEPER_MASK, count);
+		return new Cell(BEEPER_PILE_MASK, count);
 	}
 	
 	public static Cell newHorizontalWall() {
@@ -53,7 +54,7 @@ public class Cell {
 	}
 	
 	public boolean containsBeeperPile() {
-		return containsFlag(BEEPER_MASK);
+		return containsFlag(BEEPER_PILE_MASK);
 	}
 	
 	public boolean containsHorizontalWall() {

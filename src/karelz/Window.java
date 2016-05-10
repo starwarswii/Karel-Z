@@ -87,6 +87,10 @@ public class Window extends JFrame {//represents an object that displays and upd
 						}
 					}
 					
+					//by convention horizontal walls are drawn on the bottom of the occupied cell,
+					//whereas vertical walls are drawn on the left of the occupied cell.
+					//block walls take up the entire occupied cell
+					
 					//drawing walls
 					if (cell.containsWall()) {
 						g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
