@@ -35,7 +35,6 @@ public class Util {
 		return new AffineTransformOp(AffineTransform.getRotateInstance(Math.toRadians(degrees), (double)(image.getWidth()/2), (double)(image.getHeight()/2)), AffineTransformOp.TYPE_BILINEAR).filter(image, null);
 	}
 	
-	//TODO eeeh may be too inefficent
 	public static Font sizeFontToFit(Graphics2D g, Font font, String string, int width, int height) {
 		int minSize = 0;
 		int maxSize = 288;

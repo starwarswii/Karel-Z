@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 public class World {
 	
-	HashMap<Point,WorldObject> map;
+	HashMap<Point,Cell> map;
 	ArrayList<Robot> robots;
 	int width;
 	int height;
@@ -18,7 +18,7 @@ public class World {
 	Color backgroundColor;
 
 	public World(int width, int height, Color wallColor, Color beeperColor, Color beeperLabelColor, Color lineColor, Color backgroundColor) {
-		map = new HashMap<Point,WorldObject>();
+		map = new HashMap<Point,Cell>();
 		robots = new ArrayList<Robot>();
 		this.width = width;
 		this.height = height;
@@ -33,13 +33,13 @@ public class World {
 		this(width, height, Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.WHITE);//default color values
 	}
 	
-	public void addObject(WorldObject object, int x, int y) {
-		map.put(new Point(x, y), object);
+	public void add(int x, int y, Cell cell) {
+		if (map.containsKey(new Point(x, y))) {
+			map.get(new Point(x, y)).add(cell);
+		} else {
+			map.put(new Point(x, y), cell);
+		}
 		
-	}
-	
-	public WorldObject getObjectAt(int x, int y) {
-		return map.get(new Point(x, y));
 	}
 	
 	public void addRobot(Robot robot) {
