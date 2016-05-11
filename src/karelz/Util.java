@@ -19,6 +19,7 @@ public class Util {
 		try {
 			return ImageIO.read(Util.class.getClassLoader().getResource(RESOURCE_PATH+filename));
 		} catch (Exception e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -31,6 +32,7 @@ public class Util {
 		return createCursor(getImage(filename), name);
 	}
 	
+	//rotates clockwise
 	public static BufferedImage getRotatedImage(BufferedImage image, int degrees) {
 		return new AffineTransformOp(AffineTransform.getRotateInstance(Math.toRadians(degrees), (double)(image.getWidth()/2), (double)(image.getHeight()/2)), AffineTransformOp.TYPE_BILINEAR).filter(image, null);
 	}

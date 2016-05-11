@@ -14,11 +14,11 @@ public class Cell {
 	static final int BLOCK_WALL_MASK = 1 << 3;
 	
 	int flags;
-	int beeperCount;
+	int beepers;
 
-	public Cell(int flags, int count) {
+	public Cell(int flags, int beepers) {
 		this.flags = flags;
-		this.beeperCount = count;
+		this.beepers = beepers;
 	}
 	
 	public Cell(int flags) {
@@ -30,7 +30,7 @@ public class Cell {
 	}
 	
 	public int hashCode() {
-		return Objects.hash(flags, beeperCount);
+		return Objects.hash(flags, beepers);
 	}
 	
 	public static Cell newBeeperPile(int count) {
@@ -75,15 +75,15 @@ public class Cell {
 	
 	public void clear() {
 		flags = NO_MASK;
-		beeperCount = 0;
+		beepers = 0;
 	}
 	
 	public Cell add(Cell cell) {
 		flags|=cell.flags;
-		if (beeperCount == INFINITY || cell.beeperCount == INFINITY) {
-			beeperCount = INFINITY;
+		if (beepers == INFINITY || cell.beepers == INFINITY) {
+			beepers = INFINITY;
 		} else {
-			beeperCount+=cell.beeperCount;
+			beepers+=cell.beepers;
 		}
 		
 		return this;

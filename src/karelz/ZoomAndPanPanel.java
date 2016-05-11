@@ -1,6 +1,7 @@
 package karelz;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -19,10 +20,14 @@ public class ZoomAndPanPanel extends JPanel {
 		JFrame frame = new JFrame("Zoom and Pan Canvas");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		BufferedImage up = Util.getImage("karel.png");
+		BufferedImage up = Util.getImage("karel_on.png");
 		BufferedImage right = Util.getRotatedImage(up, 90);
 		BufferedImage down = Util.getRotatedImage(up, 180);
 		BufferedImage left = Util.getRotatedImage(up, 270);
+		
+		RobotImageCollection collectionNone = new RobotImageCollection();
+		RobotImageCollection collectionRed = new RobotImageCollection(Color.RED);
+		RobotImageCollection collectionGreen = new RobotImageCollection(Color.GREEN);
 		
 		PaintStrategy strat = new PaintStrategy() {
 
@@ -34,7 +39,10 @@ public class ZoomAndPanPanel extends JPanel {
 				g.drawLine(0, h/2, w, h/2);
 				g.fillOval(0, 0, 100, 100);
 				//g.drawImage(image, 200,200,300,300, null);
-				g.drawImage(up, 300, 300, 300, -300, null);
+				g.drawImage(collectionNone.getImage(RobotImage.UP_ON), 0, 800, 382, -382, null);
+				g.drawImage(collectionRed.getImage(RobotImage.RIGHT_OFF), 400, 800, 382, -382, null);
+				g.drawImage(collectionGreen.getImage(RobotImage.LEFT_ERROR), 800, 800, 382, -382, null);
+				//g.drawImage(collectionNone.getImage(RobotImage.UP_ON), 0, 0, 100, -100, null);
 				//g.drawImage(right, 300, 300, 300, 300, null);
 				//g.drawImage(down, 300, 300, 300, 300, null);
 				//g.drawImage(left, 300, 300, 300, 300, null);

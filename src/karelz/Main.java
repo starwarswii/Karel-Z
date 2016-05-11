@@ -1,9 +1,16 @@
 package karelz;
 
+import java.awt.Color;
+
 //mostly for testing. the stuff run in this main would mostly be run inside whatever bot project you were doing.
 public class Main {
 
 	public static void main(String[] args) {
+		
+		//System.out.println(Direction.UP.getClockwiseDirection().getClockwiseDirection().getClockwiseDirection().getClockwiseDirection());
+		//System.out.println(Direction.UP.getCounterclockwiseDirection().getCounterclockwiseDirection().getCounterclockwiseDirection().getCounterclockwiseDirection());
+		//System.out.println(RobotImage.getRobotImage(Direction.UP, RobotState.ON));
+		//System.out.println(RobotImage.getRobotImage(Direction.LEFT, RobotState.ERROR));
 		
 		World world = new World(20, 20);
 		world.add(3, 3, Cell.newBeeperPile(2));
@@ -17,7 +24,10 @@ public class Main {
 		world.add(12, 13, Cell.newHorizontalWall());
 		world.add(13, 12, Cell.newVerticalWall());
 		
-		world.add(12, 5, Cell.newBeeperPile(20).add(Cell.newBeeperPile(8).add(Cell.newVerticalWall())));
+		//world.add(12, 5, Cell.newBeeperPile(20).add(Cell.newBeeperPile(8).add(Cell.newVerticalWall())));
+		world.add(12, 5, Cell.newBeeperPile(20));
+		world.add(12, 5, Cell.newBeeperPile(8));
+		world.add(12, 5, Cell.newVerticalWall());
 		
 		world.add(13, 6, Cell.newBlockWall());
 		world.add(13, 5, Cell.newBeeperPile(1337));
@@ -28,6 +38,16 @@ public class Main {
 		world.add(15, 3, Cell.newBeeperPile(1234));
 		world.add(16, 3, Cell.newBeeperPile(12345));
 		world.add(17, 3, Cell.newBeeperPile(1234567890));
+		
+		world.add(new Robot(1, 1, Direction.UP));
+		world.add(new Robot(2, 1, Direction.RIGHT));
+		world.add(new Robot(3, 1, Direction.DOWN));
+		world.add(new Robot(4, 1, Direction.LEFT));
+		
+		world.add(new Robot(1, 0, Direction.UP, Color.RED));
+		world.add(new Robot(2, 0, Direction.RIGHT, Color.ORANGE));
+		world.add(new Robot(3, 0, Direction.DOWN, Color.GREEN));
+		world.add(new Robot(4, 0, Direction.LEFT, Color.BLUE));
 		
 		Window window = new Window(world);
 		window.setVisible(true);

@@ -18,6 +18,8 @@ public class Window extends JFrame {//represents an object that displays and upd
 	static final int CELL_MARGIN = 2;
 	static final int WINDOW_MARGIN = CELL_SIZE/5;
 	static final int WALL_THICKNESS = CELL_MARGIN+1;
+	static final int EDGE_WALL_MULTIPLIER = 1;
+	static final int IMAGE_OFFSET = CELL_SIZE/7;
 	
 	static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 	
@@ -39,8 +41,6 @@ public class Window extends JFrame {//represents an object that displays and upd
 				
 				//no need to fill the background color as it will already be present due to panel.setBackground();
 				
-				//don't antialias anything except the beepers and the robots maybe
-				
 				//drawing grid lines
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 				g.setColor(world.lineColor);
@@ -55,7 +55,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 					g.drawLine(WINDOW_MARGIN, (i*CELL_SIZE)+WINDOW_MARGIN, (world.width*CELL_SIZE)-1+WINDOW_MARGIN, (i*CELL_SIZE)+WINDOW_MARGIN);
 				}
 				
+				//drawing edge walls
+				g.setColor(world.wallColor);
 				
+				//drawing horizontal edge wall
+				g.fillRect(WINDOW_MARGIN, WINDOW_MARGIN-((WALL_THICKNESS-1)/2), world.width*CELL_SIZE*EDGE_WALL_MULTIPLIER, WALL_THICKNESS);
+				
+				//drawing vertical edge wall
+				g.fillRect(WINDOW_MARGIN-((WALL_THICKNESS-1)/2), WINDOW_MARGIN, WALL_THICKNESS, world.height*CELL_SIZE*EDGE_WALL_MULTIPLIER);
 				
 				//drawing cell objects
 				for (Point a : world.map.keySet()) {
@@ -70,12 +77,12 @@ public class Window extends JFrame {//represents an object that displays and upd
 						g.fillOval((a.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, (a.y*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, CELL_SIZE-(2*CELL_MARGIN), CELL_SIZE-(2*CELL_MARGIN));
 						
 						//drawing beeper pile label
-						if (cell.beeperCount > 1 || cell.beeperCount == Cell.INFINITY) {
+						if (cell.beepers > 1 || cell.beepers == Cell.INFINITY) {
 							g.setColor(world.beeperLabelColor);
 							
 							Font font = new Font("Consolas", Font.PLAIN, 12);
 
-							String text = cell.beeperCount > 1 ? Integer.toString(cell.beeperCount) : "\u221e";//infinity symbol
+							String text = cell.beepers > 1 ? Integer.toString(cell.beepers) : "\u221e";//infinity symbol
 							
 							//creates a font that fits in the desired area, then rotates it upside down, as everything is flipped on the y axis
 							g.setFont(Util.sizeFontToFit(g, font, text, CELL_SIZE-(6*CELL_MARGIN), CELL_SIZE-(4*CELL_MARGIN)).deriveFont(AffineTransform.getScaleInstance(1, -1)));
@@ -111,7 +118,13 @@ public class Window extends JFrame {//represents an object that displays and upd
 				}
 
 				
-				//TODO also draw bots from the arraylist in world
+				//drawing robots
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				
+				for (Robot a : world.robots) {
+					//the height is negative such that the image is flipped upside down properly
+					g.drawImage(a.getCurrentImage(), (a.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, ((a.y+1)*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN-IMAGE_OFFSET, CELL_SIZE-(2*CELL_MARGIN), -(CELL_SIZE-(2*CELL_MARGIN)), null);
+				}
 				
 
 				

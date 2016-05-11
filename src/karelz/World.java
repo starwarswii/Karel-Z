@@ -42,8 +42,13 @@ public class World {
 		
 	}
 	
-	public void addRobot(Robot robot) {
+	public Cell get(int x, int y) {
+		return map.getOrDefault(new Point(x, y), new Cell());
+	}
+	
+	public void add(Robot robot) {
 		robots.add(robot);
+		robot.world = this;
 	}
 	
 
