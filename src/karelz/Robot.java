@@ -49,7 +49,7 @@ public class Robot {
 		}
 	}
 	
-	//public boolean 
+	//TODO public boolean check if space in front of bot is clear to move, take into conbsidderation current cell, cell will enter, and if entering negative x or y
 	
 	public void turnLeft() {
 		
