@@ -9,6 +9,10 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.swing.JFrame;
 
 @SuppressWarnings("serial")
@@ -24,11 +28,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 	static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	World world;
+	ZoomAndPanPanel panel;
+	int delay;
 
-	public Window(World aWorld) {
+	public Window(World aWorld, int delay) {
 		super("Karel-Z");
 		
 		world = aWorld;
+		this.delay = delay;
 		
 		//the +1's give a border of .5 cells, with 20 extra vertical pixels for the title bar
 		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20, (int)SCREEN_SIZE.getHeight()));
@@ -46,7 +53,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				g.setColor(world.lineColor);
 				
 				//drawing vertical grid lines
-				for (int i = 0; i < world.width+1; i++) {//TODO draw walls going up and to the right forever
+				for (int i = 0; i < world.width+1; i++) {
 					g.drawLine((i*CELL_SIZE)+WINDOW_MARGIN, (world.height*CELL_SIZE)-1+WINDOW_MARGIN, (i*CELL_SIZE)+WINDOW_MARGIN, WINDOW_MARGIN);
 				}
 				
@@ -70,7 +77,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 					Cell cell = world.map.get(a);
 					
 					//drawing beeper pile
-					if (cell.containsBeeperPile()) {
+					if (cell.containsValidBeeperPile()) {
 						g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 						g.setColor(world.beeperColor);
 						
@@ -122,7 +129,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				
 				for (Robot a : world.robots) {
-					//the height is negative such that the image is flipped upside down properly
+					//the height is negative so that the image is flipped upside down properly
 					g.drawImage(a.getCurrentImage(), (a.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, ((a.y+1)*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN-IMAGE_OFFSET, CELL_SIZE-(2*CELL_MARGIN), -(CELL_SIZE-(2*CELL_MARGIN)), null);
 				}
 				
@@ -131,14 +138,43 @@ public class Window extends JFrame {//represents an object that displays and upd
 			}
 		};
 		
-		ZoomAndPanPanel panel = new ZoomAndPanPanel(strategy);
+		panel = new ZoomAndPanPanel(strategy);
 		panel.setBackground(world.backgroundColor);
 		
 		add(panel, BorderLayout.CENTER);
 		
 	}
 	
-	public void start() {//runs the bots n stuff
+	public void start() {//starts all the bots
 		
+		ArrayList<Robot> runningRobots = new ArrayList<Robot>(world.robots);
+		
+		for (Robot a : runningRobots) {
+			a.launchThread();
+		}
+		
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+
+			public void run() {
+				for (int i = 0; i < runningRobots.size(); i++) {
+					Robot robot = runningRobots.get(i);
+					if (robot.threadIsActive) {
+						robot.step();
+					} else {
+						runningRobots.remove(i);
+						i--;
+					}
+				}
+				//these both need to be here. it worked before with just repaint, but once i started using bots from another package, it stopped working
+				panel.paint(panel.getGraphics());
+				panel.repaint();
+				
+				if (runningRobots.isEmpty()) {
+					timer.cancel();
+				}
+			}
+			
+		}, 0, delay);
 	}
 }

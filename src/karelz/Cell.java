@@ -5,7 +5,7 @@ import java.util.Objects;
 //although there is nothing prohibiting it, by convention a cell should hold (nothing) OR (any combination of beeper pile, horizontal wall, and vertical wall), OR (only block wall)
 public class Cell {
 	
-	static final int INFINITY = -1;
+	public static final int INFINITY = -1;
 	
 	static final int NO_MASK = 0;
 	static final int BEEPER_PILE_MASK = 1 << 0;
@@ -53,8 +53,13 @@ public class Cell {
 		return (flags & flag) == flag;
 	}
 	
-	public boolean containsBeeperPile() {
+	//note that this doesn't indicate that there is a valid number of beepers in this pile ie not 0
+	private boolean containsBeeperPile() {
 		return containsFlag(BEEPER_PILE_MASK);
+	}
+	
+	public boolean containsValidBeeperPile() {
+		return containsBeeperPile() && (beepers > 0 || beepers == INFINITY);
 	}
 	
 	public boolean containsHorizontalWall() {
@@ -73,9 +78,23 @@ public class Cell {
 		return containsHorizontalWall() || containsVerticalWall() || containsBlockWall();
 	}
 	
+	public void clearBeeperPileIfEmpty() {
+		if (containsBeeperPile() && beepers == 0) {
+			unsetFlag(BEEPER_PILE_MASK);
+		}
+	}
+	
 	public void clear() {
 		flags = NO_MASK;
 		beepers = 0;
+	}
+	
+	public void setFlag(int flag) {
+		flags|=flag;
+	}
+	
+	public void unsetFlag(int flag) {
+		flags &= ~flag;
 	}
 	
 	public Cell add(Cell cell) {

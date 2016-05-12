@@ -58,4 +58,8 @@ public class Util {
 
 		return new Font(font.getName(), font.getStyle(), curSize);
 	}
+	
+	public static void sleep(long milliseconds) {
+		try {Thread.sleep(milliseconds);} catch (Exception e) {}
+	}
 }
