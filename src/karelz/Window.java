@@ -1,6 +1,7 @@
 package karelz;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -12,7 +13,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import javax.swing.JFrame;
 
 @SuppressWarnings("serial")
@@ -44,7 +44,9 @@ public class Window extends JFrame {//represents an object that displays and upd
 		
 		PaintStrategy strategy = new PaintStrategy() {
 			
-			public void paint(Graphics2D g) {
+			public void paint(Graphics2D g, Point mouse) {
+				
+
 				
 				//no need to fill the background color as it will already be present due to panel.setBackground();
 				
@@ -67,30 +69,28 @@ public class Window extends JFrame {//represents an object that displays and upd
 				
 				//drawing horizontal edge wall
 				g.fillRect(WINDOW_MARGIN, WINDOW_MARGIN-((WALL_THICKNESS-1)/2), world.width*CELL_SIZE*EDGE_WALL_MULTIPLIER, WALL_THICKNESS);
-				
+
 				//drawing vertical edge wall
 				g.fillRect(WINDOW_MARGIN-((WALL_THICKNESS-1)/2), WINDOW_MARGIN, WALL_THICKNESS, world.height*CELL_SIZE*EDGE_WALL_MULTIPLIER);
-				
+
 				//drawing cell objects
-				for (Point a : world.map.keySet()) {
-					
-					Cell cell = world.map.get(a);
-					
+				world.map.forEach((a, b) -> {
+
 					//drawing beeper pile
-					if (cell.containsValidBeeperPile()) {
+					if (b.containsValidBeeperPile()) {
 						g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 						g.setColor(world.beeperColor);
-						
+
 						g.fillOval((a.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, (a.y*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, CELL_SIZE-(2*CELL_MARGIN), CELL_SIZE-(2*CELL_MARGIN));
-						
+
 						//drawing beeper pile label
-						if (cell.beepers > 1 || cell.beepers == Cell.INFINITY) {
+						if (b.beepers > 1 || b.beepers == Cell.INFINITY) {
 							g.setColor(world.beeperLabelColor);
-							
+
 							Font font = new Font("Consolas", Font.PLAIN, 12);
 
-							String text = cell.beepers > 1 ? Integer.toString(cell.beepers) : "\u221e";//infinity symbol
-							
+							String text = b.beepers > 1 ? Integer.toString(b.beepers) : "\u221e";//infinity symbol
+
 							//creates a font that fits in the desired area, then rotates it upside down, as everything is flipped on the y axis
 							g.setFont(Util.sizeFontToFit(g, font, text, CELL_SIZE-(6*CELL_MARGIN), CELL_SIZE-(4*CELL_MARGIN)).deriveFont(AffineTransform.getScaleInstance(1, -1)));
 
@@ -100,41 +100,40 @@ public class Window extends JFrame {//represents an object that displays and upd
 							g.drawString(text, (a.x*CELL_SIZE)+((CELL_SIZE-(int)bounds.getWidth())/2)+WINDOW_MARGIN, (a.y*CELL_SIZE)+(2*CELL_MARGIN)+((CELL_SIZE+(int)bounds.getHeight())/2)+WINDOW_MARGIN);	
 						}
 					}
-					
+
 					//by convention horizontal walls are drawn on the bottom of the occupied cell,
 					//whereas vertical walls are drawn on the left of the occupied cell.
 					//block walls take up the entire occupied cell
-					
+
 					//drawing walls
-					if (cell.containsWall()) {
+					if (b.containsWall()) {
 						g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 						g.setColor(world.wallColor);
-						
-						if (cell.containsHorizontalWall()) {
+
+						if (b.containsHorizontalWall()) {
 							g.fillRect((a.x*CELL_SIZE)+WINDOW_MARGIN, (a.y*CELL_SIZE)+WINDOW_MARGIN-((WALL_THICKNESS-1)/2), CELL_SIZE, WALL_THICKNESS);
 						}
-						
-						if (cell.containsVerticalWall()) {
+
+						if (b.containsVerticalWall()) {
 							g.fillRect((a.x*CELL_SIZE)+WINDOW_MARGIN-((WALL_THICKNESS-1)/2), (a.y*CELL_SIZE)+WINDOW_MARGIN, WALL_THICKNESS, CELL_SIZE);
 						}
-						
-						if (cell.containsBlockWall()) {
+
+						if (b.containsBlockWall()) {
 							g.fillRect((a.x*CELL_SIZE)+WINDOW_MARGIN, (a.y*CELL_SIZE)+WINDOW_MARGIN, CELL_SIZE, CELL_SIZE);
 						}
 					}
-				}
-
+				});
 				
 				//drawing robots
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				
-				for (Robot a : world.robots) {
-					//the height is negative so that the image is flipped upside down properly
-					g.drawImage(a.getCurrentImage(), (a.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, ((a.y+1)*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN-IMAGE_OFFSET, CELL_SIZE-(2*CELL_MARGIN), -(CELL_SIZE-(2*CELL_MARGIN)), null);
+				world.robots.forEach(a -> g.drawImage(a.getCurrentImage(), (a.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, ((a.y+1)*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN-IMAGE_OFFSET, CELL_SIZE-(2*CELL_MARGIN), -(CELL_SIZE-(2*CELL_MARGIN)), null));
+			
+				//drawing the mouse selector thingy
+				if (mouse.x/CELL_SIZE >= 0 && mouse.y/CELL_SIZE >= 0) {
+					g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+					g.setColor(new Color(255, 0, 0, 100));
+					g.fillRect(((mouse.x/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, ((mouse.y/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, CELL_SIZE, CELL_SIZE);	
 				}
-				
-
-				
 			}
 		};
 		
@@ -149,9 +148,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 		
 		ArrayList<Robot> runningRobots = new ArrayList<Robot>(world.robots);
 		
-		for (Robot a : runningRobots) {
-			a.launchThread();
-		}
+		runningRobots.forEach(Robot::launchThread);
 		
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
@@ -167,7 +164,9 @@ public class Window extends JFrame {//represents an object that displays and upd
 					}
 				}
 				//these both need to be here. it worked before with just repaint, but once i started using bots from another package, it stopped working
-				panel.paint(panel.getGraphics());
+				//panel.paint(panel.getGraphics());
+				//DONT TOUCH, IT WORKS NOW WITH JUST THIS
+				//somehow theres no ficker, just like make NO EDITS to this file
 				panel.repaint();
 				
 				if (runningRobots.isEmpty()) {

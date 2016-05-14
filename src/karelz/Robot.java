@@ -12,23 +12,24 @@ public abstract class Robot implements RobotTask {
 	RobotImageCollection collection;
 	RobotState state;
 	World world;
+	boolean logging;
 
 	Thread thread;
 	volatile boolean threadIsActive;
 
-	protected Robot(int x, int y, Direction direction) {
+	public Robot(int x, int y, Direction direction) {
 		this(x, y, direction, 0, null, null);
 	}
 
-	protected Robot(int x, int y, Direction direction, int beepers) {
+	public Robot(int x, int y, Direction direction, int beepers) {
 		this(x, y, direction, beepers, null, null);
 	}
 
-	protected Robot(int x, int y, Direction direction, Color color) {
+	public Robot(int x, int y, Direction direction, Color color) {
 		this(x, y, direction, 0, color, null);
 	}
 
-	protected Robot(int x, int y, Direction direction, int beepers, Color color) {
+	public Robot(int x, int y, Direction direction, int beepers, Color color) {
 		this(x, y, direction, beepers, color, null);
 	}
 
@@ -40,8 +41,8 @@ public abstract class Robot implements RobotTask {
 		collection = new RobotImageCollection(color);
 		state = RobotState.ON;
 		this.world = world;
+		logging = false;
 	}
-
 
 	//this contains the robot's program
 	public abstract void task();
@@ -53,6 +54,9 @@ public abstract class Robot implements RobotTask {
 			waitForTick();
 			task();
 			threadIsActive = false;
+			if (state != RobotState.ERROR) {
+				log("finished its task");	
+			}
 		});
 		thread.start();
 	}
@@ -71,18 +75,37 @@ public abstract class Robot implements RobotTask {
 		}
 	}
 
-	void crash(String message) {
+	void log(Object message) {
+		if (logging) {
+			System.out.println("A robot at ("+x+", "+y+") has "+message);
+		}
+	}
+	
+	void crash(Object message) {
 		state = RobotState.ERROR;
 		threadIsActive = false;
-		System.out.println("A robot crashed at ("+x+", "+y+"): "+message);
+		log("crashed: "+message);
 	}
 
 	BufferedImage getCurrentImage() {
 		return collection.getImage(direction, state);
 	}
 
+	//a utility method to allow "new TestRobot(whatever).withLogging()"
+	public Robot withLogging() {
+		logging = true;
+		return this;
+	}
 	
-	protected boolean frontIsClear() {
+	public void setLogging(boolean value) {
+		logging = value;
+	}
+	
+	public boolean getLogging() {
+		return logging;
+	}
+	
+	public boolean frontIsClear() {
 		Cell currentCell = world.get(x, y);
 
 		if ((currentCell.containsHorizontalWall() && direction == Direction.DOWN) || (currentCell.containsVerticalWall() && direction == Direction.LEFT)) {
@@ -119,68 +142,70 @@ public abstract class Robot implements RobotTask {
 		return true;
 	}
 
-	protected boolean hasBeepers() {
+	public boolean hasBeepers() {
 		return beepers > 0 || beepers == Cell.INFINITY;
 	}
 	
-	protected boolean nextToABeeper() {
+	public boolean nextToABeeper() {
 		return world.get(x, y).containsValidBeeperPile();
 	}
 	
-	protected boolean nextToARobot() {//java 8 is awesome
+	public boolean nextToARobot() {//java 8 is awesome
 		return world.robots.stream().filter(a -> a.x == x && a.y == y).count() >= 2;
 	}
 	
-	protected boolean facingUp() {
+	public boolean facingUp() {
 		return direction == Direction.UP;
 	}
 	
-	protected boolean facingRight() {
+	public boolean facingRight() {
 		return direction == Direction.RIGHT;
 	}
 	
-	protected boolean facingDown() {
+	public boolean facingDown() {
 		return direction == Direction.DOWN;
 	}
 	
-	protected boolean facingLeft() {
+	public boolean facingLeft() {
 		return direction == Direction.LEFT;
 	}
 	
-	protected boolean frontIsBlocked() {return !frontIsClear();}
-	protected boolean doesntHaveBeepers() {return !hasBeepers();}
-	protected boolean notNextToABeeper() {return !nextToABeeper();}
-	protected boolean notNextToARobot() {return !nextToARobot();}
-	protected boolean notFacingUp() {return !facingUp();}
-	protected boolean notFacingRight() {return !facingRight();}
-	protected boolean notFacingDown() {return !facingDown();}
-	protected boolean notFacingLeft() {return !facingLeft();}
+	public boolean frontIsBlocked() {return !frontIsClear();}
+	public boolean doesntHaveBeepers() {return !hasBeepers();}
+	public boolean notNextToABeeper() {return !nextToABeeper();}
+	public boolean notNextToARobot() {return !nextToARobot();}
+	public boolean notFacingUp() {return !facingUp();}
+	public boolean notFacingRight() {return !facingRight();}
+	public boolean notFacingDown() {return !facingDown();}
+	public boolean notFacingLeft() {return !facingLeft();}
 	
-	protected void iterate(CodeBlock code, int times) {
+	public void iterate(CodeBlock code, int times) {
 		for (int i = 0; i < times && threadIsActive; i++) {
 			code.execute();
 		}
 	}
 
-	protected void turnOn() {
+	public void turnOn() {
 		if (state != RobotState.ERROR) {
 			state = RobotState.ON;
+			log("turned on");
 		}
 	}
 
-	protected void turnOff() {
+	public void turnOff() {
 		if (state != RobotState.ERROR) {
 			state = RobotState.OFF;
+			log("turned off");
 		}
 	}
 	
-	protected void sleep() {
+	public void sleep() {
 		if (state != RobotState.ERROR) {
 			waitForTick();
 		}
 	}
 
-	protected void move() {
+	public void move() {
 		if (state == RobotState.ON) {
 			if (frontIsClear()) {
 				switch (direction) {
@@ -203,14 +228,14 @@ public abstract class Robot implements RobotTask {
 		}
 	}
 
-	protected void turnLeft() {
+	public void turnLeft() {
 		if (state == RobotState.ON) {
 			direction = direction.getCounterclockwiseDirection();
 			waitForTick();
 		}
 	}
 
-	protected void putBeeper() {
+	public void putBeeper() {
 		if (state == RobotState.ON) {
 			if (hasBeepers() && beepers != Cell.INFINITY) {
 				beepers--;
@@ -222,7 +247,7 @@ public abstract class Robot implements RobotTask {
 		}
 	}
 	
-	protected void pickBeeper() {
+	public void pickBeeper() {
 		if (state == RobotState.ON) {
 			Cell currentCell = world.get(x, y);
 			if (currentCell.containsValidBeeperPile()) {

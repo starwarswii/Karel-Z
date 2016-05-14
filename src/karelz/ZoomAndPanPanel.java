@@ -4,11 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 @SuppressWarnings("serial")
 public class ZoomAndPanPanel extends JPanel {
@@ -31,7 +35,7 @@ public class ZoomAndPanPanel extends JPanel {
 		
 		PaintStrategy strat = new PaintStrategy() {
 
-			public void paint(Graphics2D g) {
+			public void paint(Graphics2D g, Point mouse) {
 				//System.out.println(g.getClipBounds());
 				int w = 600;
 				int h = 500;
@@ -98,12 +102,11 @@ public class ZoomAndPanPanel extends JPanel {
 		super.paintComponent(g);
 		
 		Graphics2D g2d = (Graphics2D)g.create();
+		
+		g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 
 		if (init) {
 			init = false;
-			
-			g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-			
 			g2d.translate(0, getHeight());
 			g2d.scale(1, -1);
 			zoomAndPanListener.setTransform(g2d.getTransform());
@@ -111,7 +114,11 @@ public class ZoomAndPanPanel extends JPanel {
 			g2d.setTransform(zoomAndPanListener.coordTransform);
 		}
 		
-		paintStrategy.paint(g2d);
+		Point mouse = MouseInfo.getPointerInfo().getLocation();
+		SwingUtilities.convertPointFromScreen(mouse, this);
+		Point2D.Float transformed = zoomAndPanListener.transformPoint(mouse);
+		
+		paintStrategy.paint(g2d, new Point((int)transformed.x, (int)transformed.y));
 		
 	}
 }

@@ -2,11 +2,15 @@ package karelz;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class World {
-	
+
 	HashMap<Point,Cell> map;
 	ArrayList<Robot> robots;
 	int width;
@@ -28,28 +32,127 @@ public class World {
 		this.lineColor = lineColor;
 		this.backgroundColor = backgroundColor;
 	}
-	
+
 	public World(int width, int height) {
 		this(width, height, Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.WHITE);//default color values
 	}
+
+
+	public World(String path) {
+		this(0, 0);//to set default color values
+		loadWorld(path);
+	}
 	
+	public void saveWorld(String path) {
+		try {
+			Files.write(Paths.get(path), getWorldAsArray());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void loadWorld(String path) {
+		try {
+			loadWorldString(Files.readAllLines(Paths.get(path)));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void loadWorldString(String worldString) {
+		loadWorldString(Arrays.asList(worldString.split("\n")));
+	}
+
+	public void loadWorldString(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
+		lines.forEach(a -> {
+			String[] tokens = a.split(" ");
+			switch (tokens[0]) {
+			case "world-size":
+				width = Integer.parseInt(tokens[1]);
+				height = Integer.parseInt(tokens[2]);
+				break;
+			case "wall-color":
+				wallColor = new Color(Integer.parseInt(tokens[1]));
+				break;
+			case "beeper-color":
+				beeperColor = new Color(Integer.parseInt(tokens[1]));
+				break;
+			case "beeper-label-color":
+				beeperLabelColor = new Color(Integer.parseInt(tokens[1]));
+				break;
+			case "line-color":
+				lineColor = new Color(Integer.parseInt(tokens[1]));
+				break;
+			case "background-color":
+				backgroundColor = new Color(Integer.parseInt(tokens[1]));
+				break;
+			case "beeper-pile":
+				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBeeperPile(Integer.parseInt(tokens[3])));
+				break;
+			case "horizontal-wall":
+				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newHorizontalWall());
+				break;
+			case "vertical-wall":
+				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newVerticalWall());
+				break;
+			case "block-wall":
+				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBlockWall());
+			}//TODO add bot support?
+		});
+	}
+
+	public List<String> getWorldAsArray() {
+		List<String> lines = new ArrayList<String>();
+
+		lines.add("world-size "+width+" "+height);
+		lines.add("wall-color "+Integer.toString(wallColor.getRGB()));
+		lines.add("beeper-color "+Integer.toString(beeperColor.getRGB()));
+		lines.add("beeper-label-color "+Integer.toString(beeperLabelColor.getRGB()));
+		lines.add("line-color "+Integer.toString(lineColor.getRGB()));
+		lines.add("background-color "+Integer.toString(backgroundColor.getRGB()));
+		
+		map.forEach((a, b) -> {
+			if (b.containsValidBeeperPile()) {
+				lines.add("beeper-pile "+a.x+" "+a.y+" "+b.beepers);
+			}
+
+			if (b.containsHorizontalWall()) {
+				lines.add("horizontal-wall "+a.x+" "+a.y);
+			}
+
+			if (b.containsVerticalWall()) {
+				lines.add("vertical-wall "+a.x+" "+a.y);
+			}
+
+			if (b.containsBlockWall()) {
+				lines.add("block-wall "+a.x+" "+a.y);
+			}
+		});
+
+		return lines;
+	}
+
+	public void printWorld() {
+		getWorldAsArray().forEach(System.out::println);
+	}
+
 	public void add(int x, int y, Cell cell) {
 		if (map.containsKey(new Point(x, y))) {
 			map.get(new Point(x, y)).add(cell);
 		} else {
 			map.put(new Point(x, y), cell);
 		}
-		
+
 	}
-	
+
 	public Cell get(int x, int y) {
 		return map.getOrDefault(new Point(x, y), new Cell());
 	}
-	
+
 	public void add(Robot robot) {
 		robots.add(robot);
 		robot.world = this;
 	}
-	
+
 
 }

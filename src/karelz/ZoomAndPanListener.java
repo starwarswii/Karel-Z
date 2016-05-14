@@ -6,10 +6,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import javax.swing.SwingUtilities;
-
 
 public class ZoomAndPanListener extends MouseAdapter {
 	
@@ -45,6 +43,10 @@ public class ZoomAndPanListener extends MouseAdapter {
 	}
 
 
+	public void mouseMoved(MouseEvent e) {
+		targetPanel.repaint();
+	}
+	
 	public void mousePressed(MouseEvent e) {
 		if (SwingUtilities.isLeftMouseButton(e)) {
 			targetPanel.setCursor(PAN_DRAG);
@@ -60,7 +62,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 		}
 		if (SwingUtilities.isRightMouseButton(e)) {
 			//reset pan and zoom
-			coordTransform = (AffineTransform)defaultTransform.clone();
+			coordTransform = new AffineTransform(defaultTransform);
 			zoomLevel = 0;
 			targetPanel.repaint();
 		}
@@ -80,62 +82,53 @@ public class ZoomAndPanListener extends MouseAdapter {
 	}
 
 	public void moveCamera(MouseEvent e) {
-		try {
-			dragEndScreen = e.getPoint();
-			Point2D.Float dragStart = transformPoint(dragStartScreen);
-			Point2D.Float dragEnd = transformPoint(dragEndScreen);
-			double dx = dragEnd.getX() - dragStart.getX();
-			double dy = dragEnd.getY() - dragStart.getY();
-			
-			//AffineTransform clone = (AffineTransform) coordTransform.clone();
-			//clone.translate(dx, dy);
-			//System.out.println(clone.getScaleX());
-			//if (clone.getTranslateX() >= 0 && clone.getTranslateY() >= 0) {
-			coordTransform.translate(dx, dy);
-			//}
-			dragStartScreen = dragEndScreen;
-			dragEndScreen = null;
-			targetPanel.repaint();
-		} catch (NoninvertibleTransformException ex) {
-			ex.printStackTrace();
-		}
+		dragEndScreen = e.getPoint();
+		Point2D.Float dragStart = transformPoint(dragStartScreen);
+		Point2D.Float dragEnd = transformPoint(dragEndScreen);
+		double dx = dragEnd.getX() - dragStart.getX();
+		double dy = dragEnd.getY() - dragStart.getY();
+		coordTransform.translate(dx, dy);
+		dragStartScreen = dragEndScreen;
+		dragEndScreen = null;
+		targetPanel.repaint();
 	}
 
 	public void zoomCamera(MouseWheelEvent e) {
-		try {
-			int wheelRotation = e.getWheelRotation();
-			Point p = e.getPoint();
-			if (wheelRotation > 0) {
-				if (zoomLevel < maxZoomLevel) {
-					zoomLevel++;
-					Point2D p1 = transformPoint(p);
-					coordTransform.scale(1 / zoomMultiplicationFactor, 1 / zoomMultiplicationFactor);
-					Point2D p2 = transformPoint(p);
-					coordTransform.translate(p2.getX() - p1.getX(), p2.getY() - p1.getY());
-					targetPanel.repaint();
-				}
-			} else {
-				if (zoomLevel > minZoomLevel) {
-					zoomLevel--;
-					Point2D p1 = transformPoint(p);
-					coordTransform.scale(zoomMultiplicationFactor, zoomMultiplicationFactor);
-					Point2D p2 = transformPoint(p);
-					coordTransform.translate(p2.getX() - p1.getX(), p2.getY() - p1.getY());
-					targetPanel.repaint();
-				}
+		int wheelRotation = e.getWheelRotation();
+		Point p = e.getPoint();
+		if (wheelRotation > 0) {
+			if (zoomLevel < maxZoomLevel) {
+				zoomLevel++;
+				Point2D p1 = transformPoint(p);
+				coordTransform.scale(1 / zoomMultiplicationFactor, 1 / zoomMultiplicationFactor);
+				Point2D p2 = transformPoint(p);
+				coordTransform.translate(p2.getX() - p1.getX(), p2.getY() - p1.getY());
+				targetPanel.repaint();
 			}
-		} catch (NoninvertibleTransformException ex) {
-			ex.printStackTrace();
+		} else {
+			if (zoomLevel > minZoomLevel) {
+				zoomLevel--;
+				Point2D p1 = transformPoint(p);
+				coordTransform.scale(zoomMultiplicationFactor, zoomMultiplicationFactor);
+				Point2D p2 = transformPoint(p);
+				coordTransform.translate(p2.getX() - p1.getX(), p2.getY() - p1.getY());
+				targetPanel.repaint();
+			}
 		}
 	}
 
-	public Point2D.Float transformPoint(Point p1) throws NoninvertibleTransformException {
-		AffineTransform inverse = coordTransform.createInverse();
-		Point2D.Float p2 = new Point2D.Float();
-		inverse.transform(p1, p2);
-		return p2;
+	public Point2D.Float transformPoint(Point p1) {
+		try {
+			AffineTransform inverse;
+			inverse = coordTransform.createInverse();
+			Point2D.Float p2 = new Point2D.Float();
+			inverse.transform(p1, p2);
+			return p2;
+		} catch (Exception e) {
+			return null;
+		}
 	}
-	
+
 	public void setTransform(AffineTransform transform) {
 		coordTransform = new AffineTransform(transform);
 		defaultTransform = transform;
