@@ -31,5 +31,7 @@ public class TestRobot extends Robot {
 		turnLeft();
 		move();
 		iterate(this::turnLeft, 6);
+		//iterate(this::turnLeft, 10000000);//for testing delay 0
+		turnOff();
 	}
 }

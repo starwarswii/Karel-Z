@@ -6,9 +6,9 @@ import java.awt.image.BufferedImage;
 
 public class RobotImageCollection {
 	
-	static final String FILENAME_ON = "karel_on.png";
-	static final String FILENAME_OFF = "karel_off.png";
-	static final String FILENAME_ERROR = "karel_error.png";
+	static final String FILENAME_ON = "karel-on.png";
+	static final String FILENAME_OFF = "karel-off.png";
+	static final String FILENAME_ERROR = "karel-error.png";
 	
 	static final int BADGE_X = 101;
 	static final int BADGE_Y = 134;

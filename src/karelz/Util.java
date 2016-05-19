@@ -10,10 +10,13 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 public class Util {
 
-	public static final String RESOURCE_PATH = "resources/";
+	static final String RESOURCE_PATH = "resources/";
+	//this needs to be in different class than Tool because enum static shenanigans.
+	static final BufferedImage PAN_AND_ZOOM_OVERLAY = getImage("pan-and-zoom.png");
 	
 	public static BufferedImage getImage(String filename) {
 		try {
@@ -22,6 +25,10 @@ public class Util {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static ImageIcon getIcon(String filename) {
+		return new ImageIcon(getImage(filename));
 	}
 	
 	public static Cursor createCursor(BufferedImage image, String name) {

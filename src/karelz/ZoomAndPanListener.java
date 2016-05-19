@@ -14,8 +14,8 @@ public class ZoomAndPanListener extends MouseAdapter {
 	static final int DEFAULT_MIN_ZOOM_LEVEL = -20;
 	static final int DEFAULT_MAX_ZOOM_LEVEL = 10;
 	static final double DEFAULT_ZOOM_MULTIPLICATION_FACTOR = 1.2;
-	static final Cursor PAN_HOVER = Util.createCursor("pan_hover.png", "pan_hover");
-	static final Cursor PAN_DRAG = Util.createCursor("pan_drag.png", "pan_drag");
+	static final Cursor PAN_HOVER = Util.createCursor("pan-hover.png", "pan-hover");
+	static final Cursor PAN_DRAG = Util.createCursor("pan-drag.png", "pan-drag");
 
 	ZoomAndPanPanel targetPanel;
 	int zoomLevel;

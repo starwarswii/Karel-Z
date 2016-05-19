@@ -2,18 +2,23 @@ package karelz;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JToolBar;
+import javax.swing.UIManager;
 
 @SuppressWarnings("serial")
 public class Window extends JFrame {//represents an object that displays and updates a world
@@ -30,8 +35,13 @@ public class Window extends JFrame {//represents an object that displays and upd
 	World world;
 	ZoomAndPanPanel panel;
 	int delay;
+	ToolButton currentToolButton;
 
 	public Window(World aWorld, int delay) {
+		this(aWorld, delay, false);
+	}
+	
+	public Window(World aWorld, int delay, boolean showWorldEditor) {
 		super("Karel-Z");
 		
 		world = aWorld;
@@ -41,7 +51,8 @@ public class Window extends JFrame {//represents an object that displays and upd
 		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20, (int)SCREEN_SIZE.getHeight()));
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+		try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());} catch (Exception e) {}
+
 		PaintStrategy strategy = new PaintStrategy() {
 			
 			public void paint(Graphics2D g, Point mouse) {
@@ -139,8 +150,16 @@ public class Window extends JFrame {//represents an object that displays and upd
 		
 		panel = new ZoomAndPanPanel(strategy);
 		panel.setBackground(world.backgroundColor);
-		
 		add(panel, BorderLayout.CENTER);
+		
+		if (showWorldEditor) {
+			JToolBar toolBar = new JToolBar();
+			toolBar.setFloatable(false);
+			addButtons(toolBar, world);
+			
+			add(toolBar, BorderLayout.PAGE_END);	
+		}
+		
 		
 	}
 	
@@ -150,30 +169,85 @@ public class Window extends JFrame {//represents an object that displays and upd
 		
 		runningRobots.forEach(Robot::launchThread);
 		
-		Timer timer = new Timer();
-		timer.schedule(new TimerTask() {
+		if (delay > 0) {
+			Timer timer = new Timer();
+			timer.schedule(new TimerTask() {
 
-			public void run() {
-				for (int i = 0; i < runningRobots.size(); i++) {
-					Robot robot = runningRobots.get(i);
-					if (robot.threadIsActive) {
-						robot.step();
-					} else {
-						runningRobots.remove(i);
-						i--;
+				public void run() {
+					for (int i = 0; i < runningRobots.size(); i++) {
+						Robot robot = runningRobots.get(i);
+						if (robot.threadIsActive) {
+							robot.step();
+						} else {
+							runningRobots.remove(i);
+							i--;
+						}
+					}
+					panel.repaint();
+					
+					if (runningRobots.isEmpty()) {
+						timer.cancel();
 					}
 				}
-				//these both need to be here. it worked before with just repaint, but once i started using bots from another package, it stopped working
-				//panel.paint(panel.getGraphics());
-				//DONT TOUCH, IT WORKS NOW WITH JUST THIS
-				//somehow theres no ficker, just like make NO EDITS to this file
-				panel.repaint();
 				
-				if (runningRobots.isEmpty()) {
-					timer.cancel();
+			}, 0, delay);
+		} else {//needed as timer won't accept delay 0. this below just makes it run as fast as possible
+			Thread thread = new Thread(() -> {
+				while (true) {
+					for (int i = 0; i < runningRobots.size(); i++) {
+						Robot robot = runningRobots.get(i);
+						if (robot.threadIsActive) {
+							robot.step();
+						} else {
+							runningRobots.remove(i);
+							i--;
+						}
+					}
+					panel.repaint();
+
+					if (runningRobots.isEmpty()) {
+						break;
+					}
 				}
+			});
+			thread.start();
+		}
+
+		
+	}
+	
+	public void addButtons(JToolBar toolBar, World world) {
+		ToolButton[] buttons = Tool.getButtons();
+		currentToolButton = buttons[0];
+		currentToolButton.setSelected(true);
+		
+		ActionListener listener = e -> {
+			currentToolButton.setSelected(false);
+			currentToolButton = (ToolButton)e.getSource();
+			currentToolButton.setSelected(true);
+		};
+		
+		for (ToolButton a : buttons) {
+			a.generateIcon(world, 1);
+			a.addActionListener(listener);
+			toolBar.add(a);
+		}
+		
+		//toolBar.addSeparator();
+		
+		JButton worldColors = new JButton("World Colors");
+		worldColors.setToolTipText("TODO");
+		worldColors.addActionListener((e) -> {/*something*/});
+		toolBar.add(worldColors);
+		
+	}
+
+	public void updateButtonIcons(JToolBar toolBar, World world) {
+		//TODO finish, or dont need?
+		for (Component a : toolBar.getComponents()) {
+			if (a instanceof ToolButton) {
+				((ToolButton)a).generateIcon(world, 1);//TODO change this 1 value to the value of some spinner or text area or somthin
 			}
-			
-		}, 0, delay);
+		}
 	}
 }

@@ -5,7 +5,7 @@ import karelz.*;
 
 public class Main {
 	
-	static final String worldPath = "worlds/";
+	//static final String worldPath = "worlds/";
 
 	public static void main(String[] args) {	
 		//System.out.println(Direction.UP.getClockwiseDirection().getClockwiseDirection().getClockwiseDirection().getClockwiseDirection());
@@ -57,11 +57,11 @@ public class Main {
 		
 		//world.add(new TestRobot(1, 1, Direction.UP, 0).withLogging());
 		
-		Window window = new Window(world, 100);
+		Window window = new Window(world, 100, true);
 		
 		window.setVisible(true);
-		Util.sleep(500);
-		window.start();
+		//Util.sleep(500);
+		//window.start();
 		
 	}
 
