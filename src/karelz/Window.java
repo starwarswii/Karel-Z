@@ -235,7 +235,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 		
 		//toolBar.addSeparator();
 		
-		JButton worldColors = new JButton("World Colors");
+		JButton worldColors = new JButton("World Colors");//TODO JColorChooser
 		worldColors.setToolTipText("TODO");
 		worldColors.addActionListener((e) -> {/*something*/});
 		toolBar.add(worldColors);
