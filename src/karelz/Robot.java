@@ -91,7 +91,7 @@ public abstract class Robot implements RobotTask {
 		return collection.getImage(direction, state);
 	}
 
-	//a utility method to allow "new TestRobot(whatever).withLogging()"
+	//a utility method to allow "new SomeRobot(whatever).withLogging()"
 	public Robot withLogging() {
 		logging = true;
 		return this;
@@ -151,7 +151,7 @@ public abstract class Robot implements RobotTask {
 	}
 	
 	public boolean nextToARobot() {//java 8 is awesome
-		return world.robots.stream().filter(a -> a.x == x && a.y == y).count() >= 2;
+		return world.robots.stream().filter(robot -> x == robot.x && y == robot.y).count() >= 2;
 	}
 	
 	public boolean facingUp() {

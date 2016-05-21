@@ -15,8 +15,6 @@ import javax.swing.ImageIcon;
 public class Util {
 
 	static final String RESOURCE_PATH = "resources/";
-	//this needs to be in different class than Tool because enum static shenanigans.
-	static final BufferedImage PAN_AND_ZOOM_OVERLAY = getImage("pan-and-zoom.png");
 	
 	public static BufferedImage getImage(String filename) {
 		try {

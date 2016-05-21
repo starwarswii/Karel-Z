@@ -64,8 +64,8 @@ public class World {
 	}
 
 	public void loadWorldString(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
-		lines.forEach(a -> {
-			String[] tokens = a.split(" ");
+		lines.forEach(line -> {
+			String[] tokens = line.split(" ");
 			switch (tokens[0]) {
 			case "world-size":
 				width = Integer.parseInt(tokens[1]);
@@ -136,17 +136,40 @@ public class World {
 		getWorldAsArray().forEach(System.out::println);
 	}
 
-	public void add(int x, int y, Cell cell) {
-		if (map.containsKey(new Point(x, y))) {
-			map.get(new Point(x, y)).add(cell);
+	public void add(Point point, Cell cell) {
+		if (map.containsKey(point)) {
+			map.get(point).add(cell);
 		} else {
-			map.put(new Point(x, y), cell);
+			map.put(point, cell);
 		}
-
+	}
+	
+	public void add(int x, int y, Cell cell) {
+		add(new Point(x, y), cell);
+	}
+	
+	public void removeAll(Point point) {
+		get(point).clear();
+	}
+	
+	public void removeAll(int x, int y) {
+		removeAll(new Point(x, y));
+	}
+	
+	public void remove(Point point, Cell cell) {
+		get(point).remove(cell);
+	}
+	
+	public void remove(int x, int y, Cell cell) {
+		remove(new Point(x, y), cell);
 	}
 
+	public Cell get(Point point) {
+		return map.getOrDefault(point, new Cell());
+	}
+	
 	public Cell get(int x, int y) {
-		return map.getOrDefault(new Point(x, y), new Cell());
+		return get(new Point(x, y));
 	}
 
 	public void add(Robot robot) {

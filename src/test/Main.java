@@ -40,15 +40,17 @@ public class Main {
 		world.add(16, 3, Cell.newBeeperPile(12345));
 		world.add(17, 3, Cell.newBeeperPile(1234567890));
 		
-		world.add(new TestRobot(1, 1, Direction.UP));
-		world.add(new TestRobot(2, 1, Direction.RIGHT));
-		world.add(new TestRobot(3, 1, Direction.DOWN));
+		//world.add(new TestRobot(1, 1, Direction.UP));
+		//world.add(new TestRobot(2, 1, Direction.RIGHT));
+		//world.add(new TestRobot(3, 1, Direction.DOWN));
 		world.add(new TestRobot(4, 1, Direction.LEFT));
 		
-		world.add(new TestRobot(1, 0, Direction.UP, Color.RED));
+		//world.add(new TestRobot(1, 0, Direction.UP, Color.RED));
 		world.add(new TestRobot(2, 0, Direction.RIGHT, Color.ORANGE));
-		world.add(new TestRobot(3, 0, Direction.DOWN, Color.GREEN));
-		world.add(new TestRobot(4, 0, Direction.LEFT, Color.BLUE));
+		//world.add(new TestRobot(3, 0, Direction.DOWN, Color.GREEN));
+		//world.add(new TestRobot(4, 0, Direction.LEFT, Color.BLUE));
+		
+		world.add(new TestRobot2(3, 3, Direction.UP));
 		
 		//world.printWorld();
 		
@@ -56,9 +58,7 @@ public class Main {
 		//world = World.loadSaveFile(null);
 		
 		//world.add(new TestRobot(1, 1, Direction.UP, 0).withLogging());
-		
 		Window window = new Window(world, 100, true);
-		
 		window.setVisible(true);
 		//Util.sleep(500);
 		//window.start();

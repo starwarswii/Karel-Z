@@ -5,6 +5,6 @@ import java.awt.Point;
 
 public interface PaintStrategy {
 
-	public void paint(Graphics2D g2d, Point mouse);
+	public void paint(Graphics2D g, Point point);
 
 }

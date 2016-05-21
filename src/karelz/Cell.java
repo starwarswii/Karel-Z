@@ -80,7 +80,7 @@ public class Cell {
 	
 	public void clearBeeperPileIfEmpty() {
 		if (containsBeeperPile() && beepers == 0) {
-			unsetFlag(BEEPER_PILE_MASK);
+			unsetFlags(BEEPER_PILE_MASK);
 		}
 	}
 	
@@ -89,22 +89,35 @@ public class Cell {
 		beepers = 0;
 	}
 	
-	public void setFlag(int flag) {
-		flags|=flag;
+	public void setFlags(int flags) {
+		this.flags|=flags;
 	}
 	
-	public void unsetFlag(int flag) {
-		flags &= ~flag;
+	public void unsetFlags(int flags) {
+		this.flags &= ~flags;
 	}
 	
 	public Cell add(Cell cell) {
-		flags|=cell.flags;
+		setFlags(cell.flags);
 		if (beepers == INFINITY || cell.beepers == INFINITY) {
 			beepers = INFINITY;
 		} else {
 			beepers+=cell.beepers;
 		}
 		
+		return this;
+	}
+	
+	public Cell remove(Cell cell) {
+		unsetFlags(cell.flags);
+		if (beepers > 0 && cell.containsValidBeeperPile() && cell.beepers != INFINITY) {
+			beepers-=cell.beepers;
+			if (beepers > 0) {
+				setFlags(BEEPER_PILE_MASK);
+			} else {
+				beepers = 0;
+			}
+		}
 		return this;
 	}
 	

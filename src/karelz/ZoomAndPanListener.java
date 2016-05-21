@@ -26,6 +26,8 @@ public class ZoomAndPanListener extends MouseAdapter {
 	Point dragEndScreen;
 	AffineTransform coordTransform;
 	AffineTransform defaultTransform;
+	
+	boolean enabled;
 
 	public ZoomAndPanListener(ZoomAndPanPanel targetPanel, int minZoomLevel, int maxZoomLevel, double zoomMultiplicationFactor, AffineTransform defaultTransform) {
 		this.targetPanel = targetPanel;
@@ -35,20 +37,15 @@ public class ZoomAndPanListener extends MouseAdapter {
 		zoomLevel = 0;
 		coordTransform = new AffineTransform(defaultTransform);
 		this.defaultTransform = defaultTransform;
-		targetPanel.setCursor(PAN_HOVER);
+		setEnabled(true);
 	}
 	
 	public ZoomAndPanListener(ZoomAndPanPanel targetPanel) {
 		this(targetPanel, DEFAULT_MIN_ZOOM_LEVEL, DEFAULT_MAX_ZOOM_LEVEL, DEFAULT_ZOOM_MULTIPLICATION_FACTOR, new AffineTransform());
 	}
-
-
-	public void mouseMoved(MouseEvent e) {
-		targetPanel.repaint();
-	}
 	
-	public void mousePressed(MouseEvent e) {
-		if (SwingUtilities.isLeftMouseButton(e)) {
+	public void mousePressed(MouseEvent e) {//TODO NOOOOPE move all render related stuff here (except for running the world), like that red square, and u probably wont need to send x, y with paintstrat
+		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			targetPanel.setCursor(PAN_DRAG);
 			dragStartScreen = e.getPoint();
 			dragEndScreen = null;
@@ -57,10 +54,10 @@ public class ZoomAndPanListener extends MouseAdapter {
 	}
 	
 	public void mouseReleased(MouseEvent e) {
-		if (SwingUtilities.isLeftMouseButton(e)) {
+		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			targetPanel.setCursor(PAN_HOVER);
 		}
-		if (SwingUtilities.isRightMouseButton(e)) {
+		if (enabled && SwingUtilities.isRightMouseButton(e)) {
 			//reset pan and zoom
 			coordTransform = new AffineTransform(defaultTransform);
 			zoomLevel = 0;
@@ -69,14 +66,15 @@ public class ZoomAndPanListener extends MouseAdapter {
 	}
 	
 	public void mouseDragged(MouseEvent e) {
-		if (SwingUtilities.isLeftMouseButton(e)) {
+		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			moveCamera(e);
 		}
 		
 	}
 
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		if (e.getModifiersEx() == 0) {//if no mouse buttons are being pressed
+		//if pan and zoom selected and no mouse buttons are being pressed
+		if (enabled && e.getModifiersEx() == 0) {
 			zoomCamera(e);
 		}
 	}
@@ -132,5 +130,10 @@ public class ZoomAndPanListener extends MouseAdapter {
 	public void setTransform(AffineTransform transform) {
 		coordTransform = new AffineTransform(transform);
 		defaultTransform = transform;
+	}
+	
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+		targetPanel.setCursor(this.enabled ? PAN_HOVER : Cursor.getDefaultCursor());
 	}
 }

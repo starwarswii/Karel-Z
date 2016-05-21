@@ -17,22 +17,25 @@ import javax.swing.SwingUtilities;
 @SuppressWarnings("serial")
 public class ZoomAndPanPanel extends JPanel {
 
+	boolean init;
+	ZoomAndPanListener zoomAndPanListener;
+	PaintStrategy paintStrategy;
+
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
-		
-		
+
 		JFrame frame = new JFrame("Zoom and Pan Canvas");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		BufferedImage up = Util.getImage("karel_on.png");
+
+		BufferedImage up = Util.getImage("karel-on.png");
 		BufferedImage right = Util.getRotatedImage(up, 90);
 		BufferedImage down = Util.getRotatedImage(up, 180);
 		BufferedImage left = Util.getRotatedImage(up, 270);
-		
+
 		RobotImageCollection collectionNone = new RobotImageCollection();
 		RobotImageCollection collectionRed = new RobotImageCollection(Color.RED);
 		RobotImageCollection collectionGreen = new RobotImageCollection(Color.GREEN);
-		
+
 		PaintStrategy strat = new PaintStrategy() {
 
 			public void paint(Graphics2D g, Point mouse) {
@@ -65,20 +68,15 @@ public class ZoomAndPanPanel extends JPanel {
 				//g.drawImage(op.filter(image, null), drawLocationX, drawLocationY, 300, 300, null);
 			}
 		};
-		
-		
+
 		ZoomAndPanPanel panel = new ZoomAndPanPanel(strat);
-		
+
 		frame.add(panel, BorderLayout.CENTER);
 		frame.setBounds(0, 0, 600, 500);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		//chart.createBufferStrategy(2);
 	}
-
-	boolean init;
-	ZoomAndPanListener zoomAndPanListener;
-	PaintStrategy paintStrategy;
 
 	public ZoomAndPanPanel(PaintStrategy paintStrategy) {
 		zoomAndPanListener = new ZoomAndPanListener(this);
@@ -97,12 +95,12 @@ public class ZoomAndPanPanel extends JPanel {
 		this.paintStrategy = paintStrategy;
 		init = true;
 	}
-	
+
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		
+
 		Graphics2D g2d = (Graphics2D)g.create();
-		
+
 		g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 
 		if (init) {
@@ -113,12 +111,12 @@ public class ZoomAndPanPanel extends JPanel {
 		} else {
 			g2d.setTransform(zoomAndPanListener.coordTransform);
 		}
-		
+
 		Point mouse = MouseInfo.getPointerInfo().getLocation();
 		SwingUtilities.convertPointFromScreen(mouse, this);
 		Point2D.Float transformed = zoomAndPanListener.transformPoint(mouse);
-		
+
 		paintStrategy.paint(g2d, new Point((int)transformed.x, (int)transformed.y));
-		
+
 	}
 }
