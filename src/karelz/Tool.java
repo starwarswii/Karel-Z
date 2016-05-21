@@ -72,16 +72,16 @@ public enum Tool {//TODO add a "place robot" tool?
 				g.fillRect(0, 18, 24, 6);
 				return new ImageIcon(image);
 			},
-			
+
 			(graphics, point) -> {//draw selector
 				graphics.setColor(new Color(0, 0, 200, 150));
 				graphics.fillRect(((point.x/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, ((point.y/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN-((WALL_THICKNESS-1)/2), CELL_SIZE, WALL_THICKNESS*2);
 			},
-			
+
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newHorizontalWall(), remove),//modify world
-			
+
 			"TODO"
-			
+
 			),
 
 	VERTICAL_WALL(
@@ -95,16 +95,16 @@ public enum Tool {//TODO add a "place robot" tool?
 				g.fillRect(0, 0, 6, 24);
 				return new ImageIcon(image);
 			},
-			
+
 			(graphics, point) -> {//draw selector
 				graphics.setColor(new Color(0, 0, 200, 150));
 				graphics.fillRect(((point.x/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN-((WALL_THICKNESS-1)/2), ((point.y/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, WALL_THICKNESS*2, CELL_SIZE);
 			},
-			
+
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newVerticalWall(), remove),//modify world
-			
+
 			"TODO"
-			
+
 			),
 
 	BLOCK_WALL(
@@ -116,30 +116,30 @@ public enum Tool {//TODO add a "place robot" tool?
 				g.fillRect(0, 0, 24, 24);
 				return new ImageIcon(image);
 			},
-			
+
 			(graphics, point) -> {//draw selector
 				graphics.setColor(new Color(0, 0, 200, 150));
 				graphics.fillRect(((point.x/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, ((point.y/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, CELL_SIZE, CELL_SIZE);
 			},
-			
+
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newBlockWall(), remove),//modify world
-			
+
 			"TODO"
-			
+
 			),
 
 	ERASER(
 			ToolImageOverlay.ERASER_OVERLAY,
-			
+
 			(graphics, point) -> {//draw selector
 				graphics.setColor(new Color(250, 0, 0, 150));
 				graphics.fillRect(((point.x/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, ((point.y/CELL_SIZE)*CELL_SIZE)+WINDOW_MARGIN, CELL_SIZE, CELL_SIZE);
 			},
-			
+
 			(world, point, beepers, remove) -> world.removeAll(point),//modify world
-			
+
 			"TODO"
-			
+
 			);
 
 	IconGenerator generator;

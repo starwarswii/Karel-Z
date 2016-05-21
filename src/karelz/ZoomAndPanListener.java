@@ -10,7 +10,7 @@ import java.awt.geom.Point2D;
 import javax.swing.SwingUtilities;
 
 public class ZoomAndPanListener extends MouseAdapter {
-	
+
 	static final int DEFAULT_MIN_ZOOM_LEVEL = -20;
 	static final int DEFAULT_MAX_ZOOM_LEVEL = 10;
 	static final double DEFAULT_ZOOM_MULTIPLICATION_FACTOR = 1.2;
@@ -26,7 +26,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 	Point dragEndScreen;
 	AffineTransform coordTransform;
 	AffineTransform defaultTransform;
-	
+
 	boolean enabled;
 
 	public ZoomAndPanListener(ZoomAndPanPanel targetPanel, int minZoomLevel, int maxZoomLevel, double zoomMultiplicationFactor, AffineTransform defaultTransform) {
@@ -39,20 +39,20 @@ public class ZoomAndPanListener extends MouseAdapter {
 		this.defaultTransform = defaultTransform;
 		setEnabled(true);
 	}
-	
+
 	public ZoomAndPanListener(ZoomAndPanPanel targetPanel) {
 		this(targetPanel, DEFAULT_MIN_ZOOM_LEVEL, DEFAULT_MAX_ZOOM_LEVEL, DEFAULT_ZOOM_MULTIPLICATION_FACTOR, new AffineTransform());
 	}
-	
+
 	public void mousePressed(MouseEvent e) {//TODO NOOOOPE move all render related stuff here (except for running the world), like that red square, and u probably wont need to send x, y with paintstrat
 		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			targetPanel.setCursor(PAN_DRAG);
 			dragStartScreen = e.getPoint();
 			dragEndScreen = null;
 		}
-		
+
 	}
-	
+
 	public void mouseReleased(MouseEvent e) {
 		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			targetPanel.setCursor(PAN_HOVER);
@@ -64,12 +64,12 @@ public class ZoomAndPanListener extends MouseAdapter {
 			targetPanel.repaint();
 		}
 	}
-	
+
 	public void mouseDragged(MouseEvent e) {
 		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			moveCamera(e);
 		}
-		
+
 	}
 
 	public void mouseWheelMoved(MouseWheelEvent e) {
@@ -131,7 +131,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 		coordTransform = new AffineTransform(transform);
 		defaultTransform = transform;
 	}
-	
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 		targetPanel.setCursor(this.enabled ? PAN_HOVER : Cursor.getDefaultCursor());

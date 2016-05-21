@@ -42,7 +42,7 @@ public class World {
 		this(0, 0);//to set default color values
 		loadWorld(path);
 	}
-	
+
 	public void saveWorld(String path) {
 		try {
 			Files.write(Paths.get(path), getWorldAsArray());
@@ -110,7 +110,7 @@ public class World {
 		lines.add("beeper-label-color "+Integer.toString(beeperLabelColor.getRGB()));
 		lines.add("line-color "+Integer.toString(lineColor.getRGB()));
 		lines.add("background-color "+Integer.toString(backgroundColor.getRGB()));
-		
+
 		map.forEach((a, b) -> {
 			if (b.containsValidBeeperPile()) {
 				lines.add("beeper-pile "+a.x+" "+a.y+" "+b.beepers);
@@ -143,23 +143,23 @@ public class World {
 			map.put(point, cell);
 		}
 	}
-	
+
 	public void add(int x, int y, Cell cell) {
 		add(new Point(x, y), cell);
 	}
-	
+
 	public void removeAll(Point point) {
 		get(point).clear();
 	}
-	
+
 	public void removeAll(int x, int y) {
 		removeAll(new Point(x, y));
 	}
-	
+
 	public void remove(Point point, Cell cell) {
 		get(point).remove(cell);
 	}
-	
+
 	public void remove(int x, int y, Cell cell) {
 		remove(new Point(x, y), cell);
 	}
@@ -167,7 +167,7 @@ public class World {
 	public Cell get(Point point) {
 		return map.getOrDefault(point, new Cell());
 	}
-	
+
 	public Cell get(int x, int y) {
 		return get(new Point(x, y));
 	}

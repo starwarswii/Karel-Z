@@ -15,7 +15,7 @@ import javax.swing.ImageIcon;
 public class Util {
 
 	static final String RESOURCE_PATH = "resources/";
-	
+
 	public static BufferedImage getImage(String filename) {
 		try {
 			return ImageIO.read(Util.class.getClassLoader().getResource(RESOURCE_PATH+filename));
@@ -24,24 +24,24 @@ public class Util {
 			return null;
 		}
 	}
-	
+
 	public static ImageIcon getIcon(String filename) {
 		return new ImageIcon(getImage(filename));
 	}
-	
+
 	public static Cursor createCursor(BufferedImage image, String name) {
 		return Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(image.getWidth()/2,image.getHeight()/2), name);
 	}
-	
+
 	public static Cursor createCursor(String filename, String name) {
 		return createCursor(getImage(filename), name);
 	}
-	
+
 	//rotates clockwise
 	public static BufferedImage getRotatedImage(BufferedImage image, int degrees) {
 		return new AffineTransformOp(AffineTransform.getRotateInstance(Math.toRadians(degrees), (double)(image.getWidth()/2), (double)(image.getHeight()/2)), AffineTransformOp.TYPE_BILINEAR).filter(image, null);
 	}
-	
+
 	public static Font sizeFontToFit(Graphics2D g, Font font, String string, int width, int height) {
 		int minSize = 0;
 		int maxSize = 288;
@@ -63,7 +63,7 @@ public class Util {
 
 		return new Font(font.getName(), font.getStyle(), curSize);
 	}
-	
+
 	public static void sleep(long milliseconds) {
 		try {Thread.sleep(milliseconds);} catch (Exception e) {}
 	}

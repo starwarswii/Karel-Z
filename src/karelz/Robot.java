@@ -3,7 +3,6 @@ package karelz;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-//TODO improve image of crashed robot, make X more noticeable
 public abstract class Robot implements RobotTask {
 	int x;
 	int y;
@@ -80,7 +79,7 @@ public abstract class Robot implements RobotTask {
 			System.out.println("A robot at ("+x+", "+y+") has "+message);
 		}
 	}
-	
+
 	void crash(Object message) {
 		state = RobotState.ERROR;
 		threadIsActive = false;
@@ -96,15 +95,15 @@ public abstract class Robot implements RobotTask {
 		logging = true;
 		return this;
 	}
-	
+
 	public void setLogging(boolean value) {
 		logging = value;
 	}
-	
+
 	public boolean getLogging() {
 		return logging;
 	}
-	
+
 	public boolean frontIsClear() {
 		Cell currentCell = world.get(x, y);
 
@@ -145,31 +144,31 @@ public abstract class Robot implements RobotTask {
 	public boolean hasBeepers() {
 		return beepers > 0 || beepers == Cell.INFINITY;
 	}
-	
+
 	public boolean nextToABeeper() {
 		return world.get(x, y).containsValidBeeperPile();
 	}
-	
+
 	public boolean nextToARobot() {//java 8 is awesome
 		return world.robots.stream().filter(robot -> x == robot.x && y == robot.y).count() >= 2;
 	}
-	
+
 	public boolean facingUp() {
 		return direction == Direction.UP;
 	}
-	
+
 	public boolean facingRight() {
 		return direction == Direction.RIGHT;
 	}
-	
+
 	public boolean facingDown() {
 		return direction == Direction.DOWN;
 	}
-	
+
 	public boolean facingLeft() {
 		return direction == Direction.LEFT;
 	}
-	
+
 	public boolean frontIsBlocked() {return !frontIsClear();}
 	public boolean doesntHaveBeepers() {return !hasBeepers();}
 	public boolean notNextToABeeper() {return !nextToABeeper();}
@@ -178,7 +177,7 @@ public abstract class Robot implements RobotTask {
 	public boolean notFacingRight() {return !facingRight();}
 	public boolean notFacingDown() {return !facingDown();}
 	public boolean notFacingLeft() {return !facingLeft();}
-	
+
 	public void iterate(CodeBlock code, int times) {
 		for (int i = 0; i < times && threadIsActive; i++) {
 			code.execute();
@@ -198,7 +197,7 @@ public abstract class Robot implements RobotTask {
 			log("turned off");
 		}
 	}
-	
+
 	public void sleep() {
 		if (state != RobotState.ERROR) {
 			waitForTick();
@@ -246,7 +245,7 @@ public abstract class Robot implements RobotTask {
 			waitForTick();
 		}
 	}
-	
+
 	public void pickBeeper() {
 		if (state == RobotState.ON) {
 			Cell currentCell = world.get(x, y);
