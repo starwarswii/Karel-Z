@@ -13,7 +13,7 @@ public class ToolButton extends JButton {
 		setToolTipText(this.tool.toolTip);
 	}
 
-	public void generateIcon(World world, int beepers) {
+	public void generateAndSetIcon(World world, int beepers) {
 		setIcon(tool.generateIcon(world, beepers));
 	}
 

@@ -44,7 +44,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 		this(targetPanel, DEFAULT_MIN_ZOOM_LEVEL, DEFAULT_MAX_ZOOM_LEVEL, DEFAULT_ZOOM_MULTIPLICATION_FACTOR, new AffineTransform());
 	}
 
-	public void mousePressed(MouseEvent e) {//TODO NOOOOPE move all render related stuff here (except for running the world), like that red square, and u probably wont need to send x, y with paintstrat
+	public void mousePressed(MouseEvent e) {
 		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
 			targetPanel.setCursor(PAN_DRAG);
 			dragStartScreen = e.getPoint();

@@ -1,8 +1,10 @@
 package karelz;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.RenderingHints;
@@ -16,14 +18,20 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.JToolBar;
-import javax.swing.SpinnerModel;
+import javax.swing.JToolBar.Separator;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.text.DefaultFormatter;
 
 @SuppressWarnings("serial")
 public class Window extends JFrame {//represents an object that displays and updates a world
@@ -42,6 +50,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 	int delay;
 
 	ToolButton currentToolButton;
+	JComponent[] beeperComponents;
 
 	public Window(World aWorld, int delay) {
 		this(aWorld, delay, false);
@@ -153,14 +162,81 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 		if (showWorldEditor) {
 			JToolBar toolBar = new JToolBar();
+			toolBar.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 4));
 			toolBar.setFloatable(false);
-			addButtons(toolBar, world);
-			SpinnerModel spinnerModel = new SpinnerNumberModel(-1,-1,1000,1);
-			JSpinner spinner = new JSpinner(spinnerModel);
-			toolBar.add(spinner);//TODO figure this out
 
-			//TODO custom spinner for beeper number, with unicode infinity and then integers 1 to ...
+			ToolButton[] buttons = Tool.getButtons();
+			currentToolButton = buttons[0];
+			currentToolButton.setSelected(true);
 
+			ActionListener toolButtonListener = e -> {
+				panel.repaint();
+				currentToolButton.setSelected(false);
+				currentToolButton = (ToolButton)e.getSource();
+				currentToolButton.setSelected(true);
+				panel.zoomAndPanListener.setEnabled(currentToolButton.tool == Tool.PAN_AND_ZOOM);
+				for (JComponent a : beeperComponents) {
+					a.setVisible(currentToolButton.tool == Tool.BEEPER_PILE);
+				}
+				//TODO maybe change how this works when adding robot tool if choose to, so something with the variable holding the currently active panel
+			};
+
+			for (ToolButton a : buttons) {
+				a.generateAndSetIcon(world, 1);
+				a.addActionListener(toolButtonListener);
+				toolBar.add(a);
+			}
+
+			JButton worldColors = new JButton("World Colors");//TODO JColorChooser and maybe use  SpringUtilities.makeCompactGrid ?
+			worldColors.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+			worldColors.setToolTipText("TODO");
+			worldColors.setPreferredSize(new Dimension(70, 24));
+			worldColors.addActionListener(e -> {
+				/*something*/
+			});
+			toolBar.add(worldColors);
+
+			JCheckBox paintModeCheckBox = new JCheckBox("Paint Mode", true);
+			toolBar.add(paintModeCheckBox);
+
+			beeperComponents = new JComponent[4];
+
+			//separator
+			beeperComponents[0] = new Separator(new Dimension(10, 24));
+
+			//spinner label
+			beeperComponents[1] = new JLabel("Number of Beepers");
+
+			//spinner
+			JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
+			spinner.setPreferredSize(new Dimension(40, 24));
+
+			((DefaultFormatter)((JFormattedTextField)spinner.getEditor().getComponent(0)).getFormatter()).setCommitsOnValidEdit(true);
+
+			//currentToolButton is known to be BEEPER_PILE
+			spinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world, (int)spinner.getValue()));
+
+			spinner.addMouseWheelListener(e -> {
+				if (spinner.isEnabled() && (int)spinner.getValue()-e.getWheelRotation() > 0) {
+					spinner.setValue((int)spinner.getValue()-e.getWheelRotation());
+				}
+			});
+			beeperComponents[2] = spinner;
+
+			//infinite checkbox
+			JCheckBox infiniteCheckBox = new JCheckBox("Infinite");
+
+			infiniteCheckBox.addItemListener(e -> {
+				spinner.setEnabled(!infiniteCheckBox.isSelected());
+				//currentToolButton is known to be BEEPER_PILE
+				currentToolButton.generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)spinner.getValue());
+			});
+			beeperComponents[3] = infiniteCheckBox;
+
+			for (JComponent a : beeperComponents) {
+				a.setVisible(false);
+				toolBar.add(a);
+			}
 
 			add(toolBar, BorderLayout.PAGE_END);
 
@@ -176,7 +252,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				public void placeObject(MouseEvent e) {
 					Point point = getCellPoint(e);
 					if (point.x >= 0 && point.y >= 0) {
-						currentToolButton.tool.modifyWorld(world, point, (int)spinner.getValue()/*TODO spinner */, !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
+						currentToolButton.tool.modifyWorld(world, point, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)spinner.getValue(), !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
 					}
 					lastCell = point;
 					panel.repaint();
@@ -193,8 +269,8 @@ public class Window extends JFrame {//represents an object that displays and upd
 					placeObject(e);
 				}
 
-				public void mouseDragged(MouseEvent e) {//TODO create "paintbrush mode" with checkbox that toggles click and dragging to paint lotsa squares
-					if (!lastCell.equals(getCellPoint(e))) {
+				public void mouseDragged(MouseEvent e) {
+					if (!lastCell.equals(getCellPoint(e)) && (paintModeCheckBox.isSelected() || currentToolButton.tool == Tool.ERASER)) {
 						placeObject(e);
 					}
 				}
@@ -208,42 +284,11 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 	}
 
-
-	public void addButtons(JToolBar toolBar, World world) {
-		ToolButton[] buttons = Tool.getButtons();
-		currentToolButton = buttons[0];
-		currentToolButton.setSelected(true);
-
-		ActionListener listener = e -> {
-			panel.repaint();
-			currentToolButton.setSelected(false);
-			currentToolButton = (ToolButton)e.getSource();
-			currentToolButton.setSelected(true);
-			panel.zoomAndPanListener.setEnabled(currentToolButton.tool == Tool.PAN_AND_ZOOM);
-		};
-
-		for (ToolButton a : buttons) {
-			a.generateIcon(world, 1);
-			a.addActionListener(listener);
-			toolBar.add(a);
-		}
-
-		//toolBar.addSeparator();
-
-		JButton worldColors = new JButton("World Colors");//TODO JColorChooser and maybe use  SpringUtilities.makeCompactGrid ?
-		worldColors.setToolTipText("TODO");
-		worldColors.addActionListener(e -> {
-			/*something*/
-		});
-		toolBar.add(worldColors);
-
-	}
-
-	public void updateButtonIcons(JToolBar toolBar, World world) {
-		//TODO finish, or dont need?
+	//TODO inline, as this will probably only be used once
+	public void updateToolButtonIcons(JToolBar toolBar, World world) {
 		for (Component a : toolBar.getComponents()) {
 			if (a instanceof ToolButton) {
-				((ToolButton)a).generateIcon(world, 1);//TODO change this 1 value to the value of some spinner or text area or somthin
+				((ToolButton)a).generateAndSetIcon(world, 1);//TODO change this 1 value to the value of some spinner or text area or somthin
 			}
 		}
 	}

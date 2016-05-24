@@ -63,6 +63,7 @@ public class World {
 		loadWorldString(Arrays.asList(worldString.split("\n")));
 	}
 
+	//TODO add support for converting karel worlds to this new format maybe?
 	public void loadWorldString(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
 		lines.forEach(line -> {
 			String[] tokens = line.split(" ");
