@@ -30,8 +30,11 @@ public class TestRobot extends Robot {
 		move();
 		turnLeft();
 		move();
-		iterate(this::turnLeft, 6);
-		//iterate(this::turnLeft, 10000000);//for testing delay 0
+		iterate(6, this::turnLeft);
+		//iterate(100000, this::turnLeft);//for testing delay 0
+//		iterate(12, () -> {
+//			//stuff
+//		});
 		turnOff();
 	}
 }

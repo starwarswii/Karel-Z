@@ -178,7 +178,7 @@ public abstract class Robot implements RobotTask {
 	public boolean notFacingDown() {return !facingDown();}
 	public boolean notFacingLeft() {return !facingLeft();}
 
-	public void iterate(CodeBlock code, int times) {
+	public void iterate(int times, CodeBlock code) {
 		for (int i = 0; i < times && threadIsActive; i++) {
 			code.execute();
 		}
