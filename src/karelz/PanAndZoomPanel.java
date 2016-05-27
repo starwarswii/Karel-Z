@@ -15,10 +15,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 @SuppressWarnings("serial")
-public class ZoomAndPanPanel extends JPanel {
+public class PanAndZoomPanel extends JPanel {
 
 	boolean init;
-	ZoomAndPanListener zoomAndPanListener;
+	PanAndZoomListener panAndZoomListener;
 	PaintStrategy paintStrategy;
 
 	@SuppressWarnings("unused")
@@ -69,7 +69,7 @@ public class ZoomAndPanPanel extends JPanel {
 			}
 		};
 
-		ZoomAndPanPanel panel = new ZoomAndPanPanel(strat);
+		PanAndZoomPanel panel = new PanAndZoomPanel(strat);
 
 		frame.add(panel, BorderLayout.CENTER);
 		frame.setBounds(0, 0, 600, 500);
@@ -78,20 +78,20 @@ public class ZoomAndPanPanel extends JPanel {
 		//chart.createBufferStrategy(2);
 	}
 
-	public ZoomAndPanPanel(PaintStrategy paintStrategy) {
-		zoomAndPanListener = new ZoomAndPanListener(this);
-		addMouseListener(zoomAndPanListener);
-		addMouseMotionListener(zoomAndPanListener);
-		addMouseWheelListener(zoomAndPanListener);
+	public PanAndZoomPanel(PaintStrategy paintStrategy) {
+		panAndZoomListener = new PanAndZoomListener(this);
+		addMouseListener(panAndZoomListener);
+		addMouseMotionListener(panAndZoomListener);
+		addMouseWheelListener(panAndZoomListener);
 		this.paintStrategy = paintStrategy;
 		init = true;
 	}
 
-	public ZoomAndPanPanel(int minZoomLevel, int maxZoomLevel, double zoomMultiplicationFactor, AffineTransform defaultTransform, PaintStrategy paintStrategy) {
-		zoomAndPanListener = new ZoomAndPanListener(this, minZoomLevel, maxZoomLevel, zoomMultiplicationFactor, defaultTransform);
-		addMouseListener(zoomAndPanListener);
-		addMouseMotionListener(zoomAndPanListener);
-		addMouseWheelListener(zoomAndPanListener);
+	public PanAndZoomPanel(int minZoomLevel, int maxZoomLevel, double zoomMultiplicationFactor, AffineTransform defaultTransform, PaintStrategy paintStrategy) {
+		panAndZoomListener = new PanAndZoomListener(this, minZoomLevel, maxZoomLevel, zoomMultiplicationFactor, defaultTransform);
+		addMouseListener(panAndZoomListener);
+		addMouseMotionListener(panAndZoomListener);
+		addMouseWheelListener(panAndZoomListener);
 		this.paintStrategy = paintStrategy;
 		init = true;
 	}
@@ -107,14 +107,14 @@ public class ZoomAndPanPanel extends JPanel {
 			init = false;
 			g2d.translate(0, getHeight());
 			g2d.scale(1, -1);
-			zoomAndPanListener.setTransform(g2d.getTransform());
+			panAndZoomListener.setTransform(g2d.getTransform());
 		} else {
-			g2d.setTransform(zoomAndPanListener.coordTransform);
+			g2d.setTransform(panAndZoomListener.coordTransform);
 		}
 
 		Point mouse = MouseInfo.getPointerInfo().getLocation();
 		SwingUtilities.convertPointFromScreen(mouse, this);
-		Point2D.Float transformed = zoomAndPanListener.transformPoint(mouse);
+		Point2D.Float transformed = panAndZoomListener.transformPoint(mouse);
 
 		paintStrategy.paint(g2d, new Point((int)transformed.x, (int)transformed.y));
 

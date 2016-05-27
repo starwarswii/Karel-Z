@@ -9,7 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import javax.swing.SwingUtilities;
 
-public class ZoomAndPanListener extends MouseAdapter {
+public class PanAndZoomListener extends MouseAdapter {
 
 	static final int DEFAULT_MIN_ZOOM_LEVEL = -20;
 	static final int DEFAULT_MAX_ZOOM_LEVEL = 10;
@@ -17,7 +17,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 	static final Cursor PAN_HOVER = Util.createCursor("pan-hover.png", "pan-hover");
 	static final Cursor PAN_DRAG = Util.createCursor("pan-drag.png", "pan-drag");
 
-	ZoomAndPanPanel targetPanel;
+	PanAndZoomPanel targetPanel;
 	int zoomLevel;
 	int minZoomLevel;
 	int maxZoomLevel;
@@ -29,7 +29,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 
 	boolean enabled;
 
-	public ZoomAndPanListener(ZoomAndPanPanel targetPanel, int minZoomLevel, int maxZoomLevel, double zoomMultiplicationFactor, AffineTransform defaultTransform) {
+	public PanAndZoomListener(PanAndZoomPanel targetPanel, int minZoomLevel, int maxZoomLevel, double zoomMultiplicationFactor, AffineTransform defaultTransform) {
 		this.targetPanel = targetPanel;
 		this.minZoomLevel = minZoomLevel;
 		this.maxZoomLevel = maxZoomLevel;
@@ -40,7 +40,7 @@ public class ZoomAndPanListener extends MouseAdapter {
 		setEnabled(true);
 	}
 
-	public ZoomAndPanListener(ZoomAndPanPanel targetPanel) {
+	public PanAndZoomListener(PanAndZoomPanel targetPanel) {
 		this(targetPanel, DEFAULT_MIN_ZOOM_LEVEL, DEFAULT_MAX_ZOOM_LEVEL, DEFAULT_ZOOM_MULTIPLICATION_FACTOR, new AffineTransform());
 	}
 

@@ -10,9 +10,14 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -28,9 +33,13 @@ import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.JToolBar.Separator;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SpinnerNumberModel;
@@ -52,7 +61,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 	static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
 	World world;
-	ZoomAndPanPanel panel;
+	PanAndZoomPanel panel;
 	int delay;
 
 	ToolButton currentToolButton;
@@ -71,10 +80,19 @@ public class Window extends JFrame {//represents an object that displays and upd
 		//the +1's give a border of .5 cells, with 20 extra vertical pixels for the title bar
 		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20+(showWorldEditor ? 48 : 0), (int)SCREEN_SIZE.getHeight()));
 		setLocationRelativeTo(null);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setIconImage(Util.getImage("karel-on.png"));
+		
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				//TODO "do you want to save changes?" dialog and all that
+				System.exit(0);
+			}
+		});
+		
 		try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());} catch (Exception e) {}
 
-		panel = new ZoomAndPanPanel((g, mouse) -> {
+		panel = new PanAndZoomPanel((g, mouse) -> {
 			//no need to fill the background color as it will already be present due to panel.setBackground();
 
 			//drawing grid lines
@@ -180,7 +198,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				currentToolButton.setSelected(false);
 				currentToolButton = (ToolButton)e.getSource();
 				currentToolButton.setSelected(true);
-				panel.zoomAndPanListener.setEnabled(currentToolButton.tool == Tool.PAN_AND_ZOOM);
+				panel.panAndZoomListener.setEnabled(currentToolButton.tool == Tool.PAN_AND_ZOOM);
 				for (JComponent a : beeperComponents) {
 					a.setVisible(currentToolButton.tool == Tool.BEEPER_PILE);
 				}
@@ -250,6 +268,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 			//now populating colorFrame
 			colorFrame.setBounds(0, 0, 418, 240);
 			colorFrame.setLocationRelativeTo(this);
+			colorFrame.setIconImage(getIconImage());
 			colorFrame.setResizable(false);
 			
 			JLabel wallLabel = new JLabel("Wall Color");
@@ -440,7 +459,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				Point lastCell = new Point(-1,-1);
 
 				public Point getCellPoint(MouseEvent e) {
-					Point2D.Float p = panel.zoomAndPanListener.transformPoint(e.getPoint());
+					Point2D.Float p = panel.panAndZoomListener.transformPoint(e.getPoint());
 					return new Point((int)p.x/CELL_SIZE, (int)p.y/CELL_SIZE);
 				}
 
@@ -474,9 +493,42 @@ public class Window extends JFrame {//represents an object that displays and upd
 			panel.addMouseListener(listener);
 			panel.addMouseMotionListener(listener);
 
+			
+			JMenuBar menuBar = new JMenuBar();
+			setJMenuBar(menuBar);
+			menuBar.setIgnoreRepaint(true);
+			
+			JMenu fileMenu = new JMenu("File");
+			menuBar.add(fileMenu);
+			
+			//TODO any world-change action marks it as unsaved things like load/new call a checkforSave method that brings up "do u want to save" dialog
+			JMenuItem newButton = new JMenuItem("New");
+			newButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("New");
+				}
+			});
+			newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
+			fileMenu.add(newButton);
+			
+			JMenuItem loadButton = new JMenuItem("Load");
+			loadButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
+			fileMenu.add(loadButton);
+			
+			JMenuItem saveButton = new JMenuItem("Save");
+			saveButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+			fileMenu.add(saveButton);
+			
+			JMenuItem saveAsButton = new JMenuItem("Save As...");
+			saveAsButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
+			fileMenu.add(saveAsButton);
+			
+			JMenuItem exitButton = new JMenuItem("Exit");
+			exitButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
+			exitButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
+			fileMenu.add(exitButton);
 		}
-
-
+		
 	}
 
 	public void start() {//starts all the bots
