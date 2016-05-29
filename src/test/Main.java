@@ -7,7 +7,7 @@ public class Main {
 
 	//static final String worldPath = "worlds/";
 
-	public static void main(String[] args) {	
+	public static void main(String[] args) {
 		//System.out.println(Direction.UP.getClockwiseDirection().getClockwiseDirection().getClockwiseDirection().getClockwiseDirection());
 		//System.out.println(Direction.UP.getCounterclockwiseDirection().getCounterclockwiseDirection().getCounterclockwiseDirection().getCounterclockwiseDirection());
 		//System.out.println(RobotImage.getRobotImage(Direction.UP, RobotState.ON));

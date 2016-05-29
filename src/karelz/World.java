@@ -2,6 +2,7 @@ package karelz;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -39,13 +40,20 @@ public class World {
 
 
 	public World(String path) {
-		this(0, 0);//to set default color values
 		loadWorld(path);
 	}
 
 	public void saveWorld(String path) {
 		try {
-			Files.write(Paths.get(path), getWorldAsArray());
+			Files.write(Paths.get(path), getWorldAsStringList());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void saveWorld(File file) {
+		try {
+			Files.write(Paths.get(file.toURI()), getWorldAsStringList());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -53,18 +61,43 @@ public class World {
 
 	public void loadWorld(String path) {
 		try {
-			loadWorldString(Files.readAllLines(Paths.get(path)));
+			loadWorldAsStringList(Files.readAllLines(Paths.get(path)));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void loadWorld(File file) {
+		try {
+			loadWorldAsStringList(Files.readAllLines(Paths.get(file.toURI())));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
+	
+	public void loadKarelJRobotWorld(String path) {
+		//TODO complete translation of old world form to new
+	}
+	
 	public void loadWorldString(String worldString) {
-		loadWorldString(Arrays.asList(worldString.split("\n")));
+		loadWorldAsStringList(Arrays.asList(worldString.split("\n")));
 	}
 
 	//TODO add support for converting karel worlds to this new format maybe?
-	public void loadWorldString(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
+	public void loadWorldAsStringList(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
+		
+		//completely reset this world. like calling the constructor again
+		map = new HashMap<Point,Cell>();
+		robots = new ArrayList<Robot>();
+		width = 0;
+		height = 0;
+		wallColor = Color.BLACK;
+		beeperColor = Color.BLACK;
+		beeperLabelColor = Color.WHITE;
+		lineColor = Color.BLACK;
+		backgroundColor = Color.WHITE;
+
 		lines.forEach(line -> {
 			String[] tokens = line.split(" ");
 			switch (tokens[0]) {
@@ -102,7 +135,7 @@ public class World {
 		});
 	}
 
-	public List<String> getWorldAsArray() {
+	public List<String> getWorldAsStringList() {
 		List<String> lines = new ArrayList<String>();
 
 		lines.add("world-size "+width+" "+height);
@@ -134,7 +167,7 @@ public class World {
 	}
 
 	public void printWorld() {
-		getWorldAsArray().forEach(System.out::println);
+		getWorldAsStringList().forEach(System.out::println);
 	}
 
 	public void add(Point point, Cell cell) {

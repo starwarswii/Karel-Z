@@ -54,14 +54,12 @@ public class PanAndZoomListener extends MouseAdapter {
 	}
 
 	public void mouseReleased(MouseEvent e) {
-		if (enabled && SwingUtilities.isLeftMouseButton(e)) {
-			targetPanel.setCursor(PAN_HOVER);
-		}
-		if (enabled && SwingUtilities.isRightMouseButton(e)) {
-			//reset pan and zoom
-			coordTransform = new AffineTransform(defaultTransform);
-			zoomLevel = 0;
-			targetPanel.repaint();
+		if (enabled) {
+			if (SwingUtilities.isLeftMouseButton(e)) {
+				targetPanel.setCursor(PAN_HOVER);
+			} else if (SwingUtilities.isRightMouseButton(e)) {
+				resetPanAndZoom();
+			}
 		}
 	}
 
@@ -113,6 +111,12 @@ public class PanAndZoomListener extends MouseAdapter {
 				targetPanel.repaint();
 			}
 		}
+	}
+	
+	public void resetPanAndZoom() {
+		coordTransform = new AffineTransform(defaultTransform);
+		zoomLevel = 0;
+		targetPanel.repaint();
 	}
 
 	public Point2D.Float transformPoint(Point p1) {
