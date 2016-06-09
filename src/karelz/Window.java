@@ -21,6 +21,7 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -40,6 +41,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JToolBar;
@@ -64,6 +66,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 	static final int IMAGE_OFFSET = CELL_SIZE/7;
 
 	static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
+	static final String DIRECTORY = System.getProperty("user.home")+"/Desktop";//starting location for loading and saving worlds
 
 	World world;
 	PanAndZoomPanel panel;
@@ -71,6 +74,11 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 	ToolButton currentToolButton;
 	JComponent[] beeperComponents;
+	
+	boolean dirty;
+	File saveFile;
+	ExtensionFileChooser fileChooser;
+	JMenuItem saveButton;
 
 	public Window(World aWorld, int delay) {
 		this(aWorld, delay, false);
@@ -90,10 +98,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				//TODO "do you want to save changes?" dialog and all that
-
+				
+				if (!saveWorld(false, true)) {//do you want to save changes?
+					return;
+				}
+				
 				System.gc();
 				dispose();
+				
 				//used to stop "Exception while removing reference." print outs due to a sometime occurring Interrupted Exception
 				PrintStream nullStream = new PrintStream(new OutputStream() {
 					public void write(int b) throws IOException {}
@@ -102,6 +114,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				});
 				System.setErr(nullStream);
 				System.setOut(nullStream);
+				
 				System.exit(0);
 			}
 		});
@@ -356,6 +369,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				world.lineColor = linePanel.getBackground();
 				world.backgroundColor = backgroundPanel.getBackground();
 				panel.setBackground(world.backgroundColor);
+				updateDirty(true);
 				panel.repaint();
 
 				for (Component a : toolBar.getComponents()) {
@@ -459,10 +473,80 @@ public class Window extends JFrame {//represents an object that displays and upd
 					);
 			colorFrame.getContentPane().setLayout(groupLayout);
 
+			//top menu bar
+			dirty = false;
+			saveFile = null;
+
+			JMenuBar menuBar = new JMenuBar();
+			setJMenuBar(menuBar);
+
+			JMenu fileMenu = new JMenu("File");
+			menuBar.add(fileMenu);
+
+			JMenu worldMenu = new JMenu("World");
+			menuBar.add(worldMenu);
+
+			//TODO any world-change action marks it as unsaved things like load/new call a checkforSave method that brings up "do u want to save" dialog
+			
+			JMenuItem newButton = new JMenuItem("New");//TODO make a group-layouted world size popup with two spinners. is invoked on "new" and avalable through menu option
+			newButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (saveWorld(false, true)) {
+						world = new World(10, 10);
+						panel.resetPanAndZoom();
+						panel.repaint();	
+					}
+				}
+			});
+			newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
+			fileMenu.add(newButton);
+
+			//TODO if the filetype is .kwld, convert to karelz format
+			fileChooser = new ExtensionFileChooser(DIRECTORY, "kzw");
+			fileChooser.setFileFilter(new FileNameExtensionFilter("Karel Worlds", "txt", "kzw", "kwld"));
+
+
+			JMenuItem loadButton = new JMenuItem("Load");
+			loadButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
+			loadButton.addActionListener(e -> {//TODO on load update button image colors, may need to extract method. also should setbackground to new world color on load
+				if (saveWorld(false, true) && fileChooser.showDialog(this, "Load") == JFileChooser.APPROVE_OPTION) {
+					saveFile = fileChooser.getSelectedFile();
+					world.loadWorld(saveFile);
+					panel.resetPanAndZoom();
+					updateDirty(false);
+					panel.repaint();
+				}
+			});
+			fileMenu.add(loadButton);
+
+			saveButton = new JMenuItem("Save");
+			saveButton.setEnabled(false);//is enabled as soon as a change is made
+			saveButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+			saveButton.addActionListener(e -> saveWorld(false, false));
+			fileMenu.add(saveButton);
+
+			JMenuItem saveAsButton = new JMenuItem("Save As...");
+			saveAsButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
+			saveAsButton.addActionListener(e -> saveWorld(true, false));
+			fileMenu.add(saveAsButton);
+
+			JMenuItem exitButton = new JMenuItem("Exit");
+			exitButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
+			exitButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
+			fileMenu.add(exitButton);
+
+			JMenuItem editColorsButton = new JMenuItem("Edit Colors");
+			editColorsButton.addActionListener(e -> colorFrame.setVisible(true));
+			worldMenu.add(editColorsButton);
+
+			JMenuItem worldDimensionsButton = new JMenuItem("World Dimensions");
+			//TODO action listener
+			worldMenu.add(worldDimensionsButton);
+			
 			//this listener handles object placing and deleting
 			MouseAdapter listener = new MouseAdapter() {
 
-				Point lastCell = new Point(-1,-1);
+				Point lastCellPointClicked = new Point(-1,-1);
 
 				public Point getCellPoint(MouseEvent e) {
 					Point2D.Float p = panel.panAndZoomListener.transformPoint(e.getPoint());
@@ -472,9 +556,13 @@ public class Window extends JFrame {//represents an object that displays and upd
 				public void placeObject(MouseEvent e) {
 					Point point = getCellPoint(e);
 					if (point.x >= 0 && point.y >= 0) {
+						Cell oldCell = new Cell(world.get(point));
 						currentToolButton.tool.modifyWorld(world, point, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)spinner.getValue(), !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
+						if (!oldCell.equals(new Cell(world.get(point)))) {//if the cell was actually changed
+							updateDirty(true);
+						}
 					}
-					lastCell = point;
+					lastCellPointClicked = point;
 					panel.repaint();
 				}
 
@@ -490,7 +578,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				}
 
 				public void mouseDragged(MouseEvent e) {
-					if (!lastCell.equals(getCellPoint(e)) && (paintModeCheckBox.isSelected() || currentToolButton.tool == Tool.ERASER)) {
+					if (!lastCellPointClicked.equals(getCellPoint(e)) && (paintModeCheckBox.isSelected() || currentToolButton.tool == Tool.ERASER)) {
 						placeObject(e);
 					}
 				}
@@ -498,74 +586,54 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 			panel.addMouseListener(listener);
 			panel.addMouseMotionListener(listener);
-
-
-			JMenuBar menuBar = new JMenuBar();
-			setJMenuBar(menuBar);
-
-			JMenu fileMenu = new JMenu("File");
-			menuBar.add(fileMenu);
-
-			JMenu worldMenu = new JMenu("World");
-			menuBar.add(worldMenu);
-
-			//TODO any world-change action marks it as unsaved things like load/new call a checkforSave method that brings up "do u want to save" dialog
-			JMenuItem newButton = new JMenuItem("New");//TODO make a group-layouted world size popup with two spinners. is invoked on "new" and avalable through menu option
-			newButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					world = new World(10, 10);
-					panel.panAndZoomListener.resetPanAndZoom();
-					panel.repaint();
-				}
-			});
-			newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
-			fileMenu.add(newButton);
-
-			//TODO if the filetype is .kwld, convert to karelz format
-			//JFileChooser fileChooser = new JFileChooser(System.getProperty("user.home")+"/Desktop");
-			ExtensionFileChooser fileChooser = new ExtensionFileChooser("kzw");
-			fileChooser.setFileFilter(new FileNameExtensionFilter("Karel Worlds", "txt", "kzw", "kwld"));
-
-
-			JMenuItem loadButton = new JMenuItem("Load");
-			loadButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
-			loadButton.addActionListener(e -> {
-				if (fileChooser.showDialog(this, "Load") == JFileChooser.APPROVE_OPTION) {
-					world.loadWorld(fileChooser.getSelectedFile());
-					panel.panAndZoomListener.resetPanAndZoom();
-					panel.repaint();
-				}
-			});
-			fileMenu.add(loadButton);
-
-			JMenuItem saveButton = new JMenuItem("Save");
-			saveButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
-			saveButton.addActionListener(e -> {
-				if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-					world.saveWorld(fileChooser.getSelectedFile());
-					System.out.println("Saved");
-				}
-			});
-			fileMenu.add(saveButton);
-
-			JMenuItem saveAsButton = new JMenuItem("Save As...");
-			saveAsButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
-			fileMenu.add(saveAsButton);
-
-			JMenuItem exitButton = new JMenuItem("Exit");
-			exitButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
-			exitButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
-			fileMenu.add(exitButton);
-
-			JMenuItem editColorsButton = new JMenuItem("Edit Colors");
-			editColorsButton.addActionListener(e -> colorFrame.setVisible(true));
-			worldMenu.add(editColorsButton);
-
-			JMenuItem worldDimensionsButton = new JMenuItem("World Dimensions");
-			//TODO action listener
-			worldMenu.add(worldDimensionsButton);
+			
 		}
+	}
+	
+	
+	
+//	public void setVisible(boolean b) {//TODO this is evil
+//		new Timer().scheduleAtFixedRate(new TimerTask() {
+//
+//			@Override
+//			public void run() {
+//				panel.repaint();
+//			}
+//			
+//		}, 0, 500);
+//		super.setVisible(b);
+//	}
+	
+	public boolean saveWorld(boolean saveAs, boolean confirm) {//returns false if should stop any future actions, like loading or exiting
+		if (dirty || saveAs) {
+			if (confirm) {
+				switch (JOptionPane.showOptionDialog(this, "Do you want to save the changes made?", "Karel-Z", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Save", "Don't Save", "Cancel"}, "Save")) {
+				case JOptionPane.NO_OPTION: return true;//don't save, but continue whatever future actions
+				case JOptionPane.CANCEL_OPTION: return false;//don't save, and cancel future actions
+				}
+			}
 
+			if (saveFile == null || saveAs) {
+				if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+					saveFile = fileChooser.getSelectedFile();
+				} else {
+					return false;
+				}
+			}
+			world.saveWorld(saveFile);
+			updateDirty(false);
+		}
+		return true;
+	}
+
+	public void updateTitle() {//\u2013 is EN_DASH
+		setTitle("Karel-Z"+(saveFile != null ? " \u2013 "+saveFile.getName() : "")+(dirty ? "*" : ""));
+	}
+
+	public void updateDirty(boolean value) {
+		dirty = value;
+		saveButton.setEnabled(value);
+		updateTitle();
 	}
 
 	public void start() {//starts all the bots

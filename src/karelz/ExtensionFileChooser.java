@@ -13,6 +13,11 @@ public class ExtensionFileChooser extends JFileChooser {
 		super();
 		this.extension = extension;
 	}
+	
+	public ExtensionFileChooser(String currentDirectoryPath, String extension) {
+		super(currentDirectoryPath);
+		this.extension = extension;
+	}
 
 	public File getSelectedFile() {
 		File selectedFile = super.getSelectedFile();
@@ -29,7 +34,7 @@ public class ExtensionFileChooser extends JFileChooser {
 		if (getDialogType() == SAVE_DIALOG) {
 			File selectedFile = getSelectedFile();
 			if (selectedFile != null && selectedFile.exists()) {
-				if (JOptionPane.showConfirmDialog(this, "The file "+selectedFile.getName()+" already exists. Do you want to replace the existing file?", "Ovewrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.NO_OPTION) {
+				if (JOptionPane.showOptionDialog(this, "The file "+selectedFile.getName()+" already exists. Do you want to replace the existing file?", "Ovewrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Yes", "No"}, "No") == JOptionPane.NO_OPTION) {
 					return;
 				}	
 			}

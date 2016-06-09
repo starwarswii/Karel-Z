@@ -119,4 +119,8 @@ public class PanAndZoomPanel extends JPanel {
 		paintStrategy.paint(g2d, new Point((int)transformed.x, (int)transformed.y));
 
 	}
+	
+	public void resetPanAndZoom() {
+		panAndZoomListener.resetPanAndZoom();
+	}
 }
