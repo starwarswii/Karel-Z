@@ -10,7 +10,6 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -30,6 +29,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
@@ -45,14 +45,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
 import javax.swing.JToolBar.Separator;
+import javax.swing.KeyStroke;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.GroupLayout.Alignment;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DefaultFormatter;
 
 @SuppressWarnings("serial")
@@ -74,11 +73,23 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 	ToolButton currentToolButton;
 	JComponent[] beeperComponents;
-	
+
+	JToolBar toolBar;
+	JCheckBox infiniteCheckBox;
+	JSpinner beeperSpinner;
+
+	JPanel wallPanel;
+	JPanel beeperPanel;
+	JPanel beeperLabelPanel;
+	JPanel linePanel;
+	JPanel backgroundPanel;
+
 	boolean dirty;
+	boolean newWorld;
 	File saveFile;
 	ExtensionFileChooser fileChooser;
 	JMenuItem saveButton;
+
 
 	public Window(World aWorld, int delay) {
 		this(aWorld, delay, false);
@@ -98,14 +109,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				
+
 				if (!saveWorld(false, true)) {//do you want to save changes?
 					return;
 				}
-				
+
 				System.gc();
-				dispose();
-				
+				dispose();//TODO maybe make all other pop up windows instance variables and dispose of them here too?
+
 				//used to stop "Exception while removing reference." print outs due to a sometime occurring Interrupted Exception
 				PrintStream nullStream = new PrintStream(new OutputStream() {
 					public void write(int b) throws IOException {}
@@ -114,7 +125,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				});
 				System.setErr(nullStream);
 				System.setOut(nullStream);
-				
+
 				System.exit(0);
 			}
 		});
@@ -126,7 +137,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 			//drawing grid lines
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-			g.setColor(world.lineColor);
+			g.setColor(world.colorCollection.lineColor);
 
 			//drawing vertical grid lines
 			for (int i = 0; i < world.width+1; i++) {
@@ -139,7 +150,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 			}
 
 			//drawing edge walls
-			g.setColor(world.wallColor);
+			g.setColor(world.colorCollection.wallColor);
 
 			//drawing horizontal edge wall
 			g.fillRect(WINDOW_MARGIN, WINDOW_MARGIN-((WALL_THICKNESS-1)/2), world.width*CELL_SIZE*EDGE_WALL_MULTIPLIER, WALL_THICKNESS);
@@ -153,13 +164,13 @@ public class Window extends JFrame {//represents an object that displays and upd
 				//drawing beeper pile
 				if (cell.containsValidBeeperPile()) {
 					g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-					g.setColor(world.beeperColor);
+					g.setColor(world.colorCollection.beeperColor);
 
 					g.fillOval((point.x*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, (point.y*CELL_SIZE)+CELL_MARGIN+WINDOW_MARGIN, CELL_SIZE-(2*CELL_MARGIN), CELL_SIZE-(2*CELL_MARGIN));
 
 					//drawing beeper pile label
 					if (cell.beepers > 1 || cell.beepers == Cell.INFINITY) {
-						g.setColor(world.beeperLabelColor);
+						g.setColor(world.colorCollection.beeperLabelColor);
 
 						Font font = new Font("Consolas", Font.PLAIN, 12);
 
@@ -182,7 +193,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				//drawing walls
 				if (cell.containsWall()) {
 					g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-					g.setColor(world.wallColor);
+					g.setColor(world.colorCollection.wallColor);
 
 					if (cell.containsHorizontalWall()) {
 						g.fillRect((point.x*CELL_SIZE)+WINDOW_MARGIN, (point.y*CELL_SIZE)+WINDOW_MARGIN-((WALL_THICKNESS-1)/2), CELL_SIZE, WALL_THICKNESS);
@@ -210,11 +221,11 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 		});
 
-		panel.setBackground(world.backgroundColor);
+		panel.setBackground(world.colorCollection.backgroundColor);
 		add(panel, BorderLayout.CENTER);
 
 		if (showWorldEditor) {
-			JToolBar toolBar = new JToolBar();
+			toolBar = new JToolBar();
 			toolBar.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 4));
 			toolBar.setFloatable(false);
 
@@ -251,29 +262,28 @@ public class Window extends JFrame {//represents an object that displays and upd
 			//spinner label
 			beeperComponents[1] = new JLabel("Number of Beepers");
 
-			//spinner
-			JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
-			spinner.setPreferredSize(new Dimension(40, 24));
+			beeperSpinner = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
+			beeperSpinner.setPreferredSize(new Dimension(40, 24));
 
-			((DefaultFormatter)((JFormattedTextField)spinner.getEditor().getComponent(0)).getFormatter()).setCommitsOnValidEdit(true);
+			//makes any edit to the spinner take effect immediately
+			((DefaultFormatter)((JFormattedTextField)beeperSpinner.getEditor().getComponent(0)).getFormatter()).setCommitsOnValidEdit(true);
 
 			//currentToolButton is known to be BEEPER_PILE
-			spinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world, (int)spinner.getValue()));
+			beeperSpinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world, (int)beeperSpinner.getValue()));
 
-			spinner.addMouseWheelListener(e -> {
-				if (spinner.isEnabled() && (int)spinner.getValue()-e.getWheelRotation() > 0) {
-					spinner.setValue((int)spinner.getValue()-e.getWheelRotation());
+			beeperSpinner.addMouseWheelListener(e -> {
+				if (beeperSpinner.isEnabled() && (int)beeperSpinner.getValue()-e.getWheelRotation() > 0) {
+					beeperSpinner.setValue((int)beeperSpinner.getValue()-e.getWheelRotation());
 				}
 			});
-			beeperComponents[2] = spinner;
+			beeperComponents[2] = beeperSpinner;
 
-			//infinite checkbox
-			JCheckBox infiniteCheckBox = new JCheckBox("Infinite");
+			infiniteCheckBox = new JCheckBox("Infinite");
 
 			infiniteCheckBox.addItemListener(e -> {
-				spinner.setEnabled(!infiniteCheckBox.isSelected());
+				beeperSpinner.setEnabled(!infiniteCheckBox.isSelected());
 				//currentToolButton is known to be BEEPER_PILE
-				currentToolButton.generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)spinner.getValue());
+				currentToolButton.generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
 			});
 			beeperComponents[3] = infiniteCheckBox;
 
@@ -284,7 +294,8 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 			add(toolBar, BorderLayout.PAGE_END);
 
-			JFrame colorFrame = new JFrame("Karel-Z World Colors");
+			//Color Window
+			JFrame colorFrame = new JFrame("World Colors");
 			colorFrame.setBounds(0, 0, 418, 240);
 			colorFrame.setLocationRelativeTo(this);
 			colorFrame.setIconImage(getIconImage());
@@ -296,25 +307,25 @@ public class Window extends JFrame {//represents an object that displays and upd
 			JLabel lineLabel = new JLabel("Line Color");
 			JLabel backgroundLabel = new JLabel("Background Color");
 
-			JPanel wallPanel = new JPanel();
+			wallPanel = new JPanel();
 			wallPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			wallPanel.setBackground(world.wallColor);
+			wallPanel.setBackground(world.colorCollection.wallColor);
 
-			JPanel beeperPanel = new JPanel();
+			beeperPanel = new JPanel();
 			beeperPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			beeperPanel.setBackground(world.beeperColor);
+			beeperPanel.setBackground(world.colorCollection.beeperColor);
 
-			JPanel beeperLabelPanel = new JPanel();
+			beeperLabelPanel = new JPanel();
 			beeperLabelPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			beeperLabelPanel.setBackground(world.beeperLabelColor);
+			beeperLabelPanel.setBackground(world.colorCollection.beeperLabelColor);
 
-			JPanel linePanel = new JPanel();
+			linePanel = new JPanel();
 			linePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			linePanel.setBackground(world.lineColor);
+			linePanel.setBackground(world.colorCollection.lineColor);
 
-			JPanel backgroundPanel = new JPanel();
+			backgroundPanel = new JPanel();
 			backgroundPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			backgroundPanel.setBackground(world.backgroundColor);
+			backgroundPanel.setBackground(world.colorCollection.backgroundColor);
 
 			JButton wallButton = new JButton("Choose Color");
 			wallButton.setMargin(new Insets(2, 2, 2, 2));
@@ -361,69 +372,52 @@ public class Window extends JFrame {//represents an object that displays and upd
 				}
 			});
 
-			JButton okButton = new JButton("OK");
-			okButton.addActionListener(e -> {
-				world.wallColor = wallPanel.getBackground();
-				world.beeperColor = beeperPanel.getBackground();
-				world.beeperLabelColor = beeperLabelPanel.getBackground();
-				world.lineColor = linePanel.getBackground();
-				world.backgroundColor = backgroundPanel.getBackground();
-				panel.setBackground(world.backgroundColor);
+			JButton colorOkButton = new JButton("OK");
+			colorOkButton.addActionListener(e -> {
+				updateWorldColors(new WorldColorCollection(wallPanel.getBackground(), beeperPanel.getBackground(), beeperLabelPanel.getBackground(), linePanel.getBackground(), backgroundPanel.getBackground()));
 				updateDirty(true);
-				panel.repaint();
-
-				for (Component a : toolBar.getComponents()) {
-					if (a instanceof ToolButton) {
-						((ToolButton)a).generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)spinner.getValue());
-					}
-				}
-
 				colorFrame.setVisible(false);
 			});
 
-			JButton cancelButton = new JButton("Cancel");
-			cancelButton.addActionListener(e -> colorFrame.setVisible(false));
+			JButton colorCancelButton = new JButton("Cancel");
+			colorCancelButton.addActionListener(e -> colorFrame.setVisible(false));
 
 			JButton resetButton = new JButton("Reset World Colors");
 			resetButton.addActionListener(e -> {
-				wallPanel.setBackground(Color.BLACK);
-				beeperPanel.setBackground(Color.BLACK);
-				beeperLabelPanel.setBackground(Color.WHITE);
-				linePanel.setBackground(Color.BLACK);
-				backgroundPanel.setBackground(Color.WHITE);
-				//click the OK button
-				okButton.doClick(0);
+				updateWorldColors(WorldColorCollection.getDefaultWorldColorCollection());
+				updateDirty(true);
+				colorFrame.setVisible(false);
 			});
 
 			//generated code, don't touch
-			GroupLayout groupLayout = new GroupLayout(colorFrame.getContentPane());
-			groupLayout.setHorizontalGroup(
-					groupLayout.createParallelGroup(Alignment.LEADING)
-					.addGroup(groupLayout.createSequentialGroup()
+			GroupLayout colorLayout = new GroupLayout(colorFrame.getContentPane());
+			colorLayout.setHorizontalGroup(
+					colorLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(colorLayout.createSequentialGroup()
 							.addContainerGap()
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-									.addGroup(groupLayout.createSequentialGroup()
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+									.addGroup(colorLayout.createSequentialGroup()
+											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
 													.addComponent(wallLabel)
 													.addComponent(beeperLabel)
 													.addComponent(beeperLabelLabel)
 													.addComponent(lineLabel)
 													.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 84, GroupLayout.PREFERRED_SIZE))
 											.addGap(67)
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
 													.addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
 													.addComponent(linePanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
 													.addComponent(beeperLabelPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
 													.addComponent(beeperPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
 													.addComponent(wallPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)))
-									.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(okButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
+									.addGroup(colorLayout.createSequentialGroup()
+											.addComponent(colorOkButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
 											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(cancelButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
+											.addComponent(colorCancelButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
 											.addPreferredGap(ComponentPlacement.RELATED)
 											.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 127, GroupLayout.PREFERRED_SIZE)))
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
 									.addComponent(beeperButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
 									.addComponent(beeperLabelButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
 									.addComponent(lineButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
@@ -431,50 +425,156 @@ public class Window extends JFrame {//represents an object that displays and upd
 									.addComponent(wallButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 							.addGap(12))
 					);
-			groupLayout.setVerticalGroup(
-					groupLayout.createParallelGroup(Alignment.TRAILING)
-					.addGroup(groupLayout.createSequentialGroup()
+			colorLayout.setVerticalGroup(
+					colorLayout.createParallelGroup(Alignment.TRAILING)
+					.addGroup(colorLayout.createSequentialGroup()
 							.addContainerGap()
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
 									.addComponent(wallPanel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
 									.addComponent(wallLabel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
 									.addComponent(wallButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
 									.addComponent(beeperPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 									.addComponent(beeperLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 									.addComponent(beeperButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-									.addGroup(groupLayout.createSequentialGroup()
+							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+									.addGroup(colorLayout.createSequentialGroup()
 											.addComponent(beeperLabelLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 											.addPreferredGap(ComponentPlacement.RELATED)
 											.addComponent(lineLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 											.addPreferredGap(ComponentPlacement.RELATED)
 											.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-									.addGroup(groupLayout.createSequentialGroup()
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+									.addGroup(colorLayout.createSequentialGroup()
+											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
 													.addComponent(beeperLabelPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 													.addComponent(beeperLabelButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
 											.addPreferredGap(ComponentPlacement.RELATED)
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
 													.addComponent(linePanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 													.addComponent(lineButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
 											.addPreferredGap(ComponentPlacement.RELATED)
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
 													.addComponent(backgroundButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 													.addComponent(backgroundPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))))
 							.addGap(18)
-							.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE, false)
-									.addComponent(cancelButton)
-									.addComponent(okButton)
+							.addGroup(colorLayout.createParallelGroup(Alignment.BASELINE, false)
+									.addComponent(colorCancelButton)
+									.addComponent(colorOkButton)
 									.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
 							.addContainerGap())
 					);
-			colorFrame.getContentPane().setLayout(groupLayout);
+			colorFrame.getContentPane().setLayout(colorLayout);
 
-			//top menu bar
+			//Size Window
+			//defined first so sizeFrame anonymous class can access them
+			JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(world.width, 1, null, 1));
+			JSpinner heightSpinner = new JSpinner(new SpinnerNumberModel(world.height, 1, null, 1));
+
+			JFrame sizeFrame = new JFrame("World Size") {
+				public void setVisible(boolean b) {
+					if (newWorld && !b) {
+						world = new World(20, 20);
+						panel.resetPanAndZoom();
+						updateWorldColors(world.colorCollection);
+						updateDirty(false);
+						newWorld = false;
+						panel.repaint();
+					}
+					super.setVisible(b);
+				}
+			};
+			sizeFrame.setBounds(0, 0, 252, 135);
+			sizeFrame.setLocationRelativeTo(this);
+			sizeFrame.setIconImage(getIconImage());
+			sizeFrame.setResizable(false);
+
+			JLabel widthLabel = new JLabel("Width");
+			JLabel heightLabel = new JLabel("Height");
+
+			widthSpinner.addMouseWheelListener(e -> {
+				if ((int)widthSpinner.getValue()-e.getWheelRotation() > 0) {
+					widthSpinner.setValue((int)widthSpinner.getValue()-e.getWheelRotation());
+				}
+			});
+
+			heightSpinner.addMouseWheelListener(e -> {
+				if ((int)heightSpinner.getValue()-e.getWheelRotation() > 0) {
+					heightSpinner.setValue((int)heightSpinner.getValue()-e.getWheelRotation());
+				}
+			});
+
+			JButton sizeOkButton = new JButton("OK");
+			sizeOkButton.addActionListener(e -> {
+				if (newWorld) {
+					world = new World((int)widthSpinner.getValue(), (int)heightSpinner.getValue());
+					panel.resetPanAndZoom();
+					updateWorldColors(world.colorCollection);
+					updateDirty(false);
+					newWorld = false;
+				} else {
+					world.width = (int)widthSpinner.getValue();
+					world.height = (int)heightSpinner.getValue();
+					updateDirty(true);
+				}
+				panel.repaint();
+				sizeFrame.setVisible(false);
+			});
+
+			JButton sizeCancelButton = new JButton("Cancel");
+			sizeCancelButton.addActionListener(e -> {
+				sizeFrame.setVisible(false);
+			});
+
+			//generated code, don't touch
+			GroupLayout sizeLayout = new GroupLayout(sizeFrame.getContentPane());
+			sizeLayout.setHorizontalGroup(
+					sizeLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(sizeLayout.createSequentialGroup()
+							.addContainerGap()
+							.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
+									.addGroup(sizeLayout.createSequentialGroup()
+											.addComponent(widthLabel)
+											.addContainerGap(198, Short.MAX_VALUE))
+									.addGroup(sizeLayout.createSequentialGroup()
+											.addComponent(heightLabel)
+											.addContainerGap(195, Short.MAX_VALUE))
+									.addGroup(sizeLayout.createSequentialGroup()
+											.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
+													.addGroup(sizeLayout.createSequentialGroup()
+															.addGap(77)
+															.addGroup(sizeLayout.createParallelGroup(Alignment.LEADING)
+																	.addComponent(heightSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
+																	.addComponent(widthSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)))
+													.addGroup(Alignment.LEADING, sizeLayout.createSequentialGroup()
+															.addComponent(sizeOkButton)
+															.addPreferredGap(ComponentPlacement.RELATED)
+															.addComponent(sizeCancelButton)))
+											.addContainerGap(19, GroupLayout.PREFERRED_SIZE))))
+					);
+			sizeLayout.setVerticalGroup(
+					sizeLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(sizeLayout.createSequentialGroup()
+							.addContainerGap()
+							.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+									.addComponent(widthLabel)
+									.addComponent(widthSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+									.addComponent(heightLabel)
+									.addComponent(heightSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+							.addGap(18)
+							.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+									.addComponent(sizeOkButton)
+									.addComponent(sizeCancelButton))
+							.addContainerGap(13, Short.MAX_VALUE))
+					);
+			sizeFrame.getContentPane().setLayout(sizeLayout);
+
+			//Top Menu Bar
 			dirty = false;
+			newWorld = false;
 			saveFile = null;
 
 			JMenuBar menuBar = new JMenuBar();
@@ -486,16 +586,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 			JMenu worldMenu = new JMenu("World");
 			menuBar.add(worldMenu);
 
-			//TODO any world-change action marks it as unsaved things like load/new call a checkforSave method that brings up "do u want to save" dialog
-			
-			JMenuItem newButton = new JMenuItem("New");//TODO make a group-layouted world size popup with two spinners. is invoked on "new" and avalable through menu option
-			newButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if (saveWorld(false, true)) {
-						world = new World(10, 10);
-						panel.resetPanAndZoom();
-						panel.repaint();	
-					}
+			JMenuItem newButton = new JMenuItem("New");
+			newButton.addActionListener(e -> {
+				if (saveWorld(false, true)) {
+					newWorld = true;
+					saveFile = null;
+					widthSpinner.setValue(20);
+					heightSpinner.setValue(20);
+					sizeFrame.setVisible(true);//sizeFrame and sizeOkButton handle new world creation because newWorld is true
 				}
 			});
 			newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
@@ -508,13 +606,13 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 			JMenuItem loadButton = new JMenuItem("Load");
 			loadButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
-			loadButton.addActionListener(e -> {//TODO on load update button image colors, may need to extract method. also should setbackground to new world color on load
+			loadButton.addActionListener(e -> {
 				if (saveWorld(false, true) && fileChooser.showDialog(this, "Load") == JFileChooser.APPROVE_OPTION) {
 					saveFile = fileChooser.getSelectedFile();
 					world.loadWorld(saveFile);
 					panel.resetPanAndZoom();
+					updateWorldColors(world.colorCollection);
 					updateDirty(false);
-					panel.repaint();
 				}
 			});
 			fileMenu.add(loadButton);
@@ -539,10 +637,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 			editColorsButton.addActionListener(e -> colorFrame.setVisible(true));
 			worldMenu.add(editColorsButton);
 
-			JMenuItem worldDimensionsButton = new JMenuItem("World Dimensions");
-			//TODO action listener
-			worldMenu.add(worldDimensionsButton);
-			
+			JMenuItem worldSizeButton = new JMenuItem("Edit World Size");
+			worldSizeButton.addActionListener(e -> {
+				widthSpinner.setValue(world.width);
+				heightSpinner.setValue(world.height);
+				sizeFrame.setVisible(true);
+			});
+			worldMenu.add(worldSizeButton);
+
 			//this listener handles object placing and deleting
 			MouseAdapter listener = new MouseAdapter() {
 
@@ -557,7 +659,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 					Point point = getCellPoint(e);
 					if (point.x >= 0 && point.y >= 0) {
 						Cell oldCell = new Cell(world.get(point));
-						currentToolButton.tool.modifyWorld(world, point, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)spinner.getValue(), !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
+						currentToolButton.tool.modifyWorld(world, point, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue(), !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
 						if (!oldCell.equals(new Cell(world.get(point)))) {//if the cell was actually changed
 							updateDirty(true);
 						}
@@ -586,24 +688,24 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 			panel.addMouseListener(listener);
 			panel.addMouseMotionListener(listener);
-			
+
 		}
 	}
-	
-	
-	
-//	public void setVisible(boolean b) {//TODO this is evil
-//		new Timer().scheduleAtFixedRate(new TimerTask() {
-//
-//			@Override
-//			public void run() {
-//				panel.repaint();
-//			}
-//			
-//		}, 0, 500);
-//		super.setVisible(b);
-//	}
-	
+
+
+
+	//	public void setVisible(boolean b) {//todo this is evil
+	//		new Timer().scheduleAtFixedRate(new TimerTask() {
+	//
+	//			@Override
+	//			public void run() {
+	//				panel.repaint();
+	//			}
+	//			
+	//		}, 0, 500);
+	//		super.setVisible(b);
+	//	}
+
 	public boolean saveWorld(boolean saveAs, boolean confirm) {//returns false if should stop any future actions, like loading or exiting
 		if (dirty || saveAs) {
 			if (confirm) {
@@ -634,6 +736,31 @@ public class Window extends JFrame {//represents an object that displays and upd
 		dirty = value;
 		saveButton.setEnabled(value);
 		updateTitle();
+	}
+
+	public void updateWorldColors(WorldColorCollection colorCollection) {
+		//update world color collection
+		world.colorCollection = colorCollection;
+
+		//update color panels
+		wallPanel.setBackground(colorCollection.wallColor);
+		beeperPanel.setBackground(colorCollection.beeperColor);
+		beeperLabelPanel.setBackground(colorCollection.beeperLabelColor);
+		linePanel.setBackground(colorCollection.lineColor);
+		backgroundPanel.setBackground(colorCollection.backgroundColor);
+
+		//update panel background
+		panel.setBackground(colorCollection.backgroundColor);
+
+		//update tool icons
+		for (Component a : toolBar.getComponents()) {
+			if (a instanceof ToolButton) {
+				((ToolButton)a).generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
+			}
+		}
+
+		//repaint
+		panel.repaint();
 	}
 
 	public void start() {//starts all the bots
@@ -686,5 +813,4 @@ public class Window extends JFrame {//represents an object that displays and upd
 			thread.start();
 		}
 	}
-
 }

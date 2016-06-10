@@ -58,7 +58,7 @@ public class Main {
 		//world = World.loadSaveFile(null);
 
 		//world.add(new TestRobot(1, 1, Direction.UP, 0).withLogging());
-		
+
 		Window window = new Window(world, 100, true);
 		window.setVisible(true);
 		//Util.sleep(500);

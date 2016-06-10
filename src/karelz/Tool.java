@@ -25,13 +25,13 @@ public enum Tool {//TODO add a "place robot" tool?
 				Graphics2D g = image.createGraphics();
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-				g.setColor(world.backgroundColor);
+				g.setColor(world.colorCollection.backgroundColor);
 				g.fillRect(0, 0, 24, 24);
-				g.setColor(world.beeperColor);
+				g.setColor(world.colorCollection.beeperColor);
 				g.fillOval(0, 0, 24, 24);
 
 				if (beepers > 1 || beepers == Cell.INFINITY) {
-					g.setColor(world.beeperLabelColor);
+					g.setColor(world.colorCollection.beeperLabelColor);
 
 					Font font = new Font("Consolas", Font.PLAIN, 12);
 
@@ -66,9 +66,9 @@ public enum Tool {//TODO add a "place robot" tool?
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics g = image.createGraphics();
 
-				g.setColor(world.backgroundColor);
+				g.setColor(world.colorCollection.backgroundColor);
 				g.fillRect(0, 0, 24, 18);
-				g.setColor(world.wallColor);
+				g.setColor(world.colorCollection.wallColor);
 				g.fillRect(0, 18, 24, 6);
 				return new ImageIcon(image);
 			},
@@ -89,9 +89,9 @@ public enum Tool {//TODO add a "place robot" tool?
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics g = image.createGraphics();
 
-				g.setColor(world.backgroundColor);
+				g.setColor(world.colorCollection.backgroundColor);
 				g.fillRect(6, 0, 18, 24);
-				g.setColor(world.wallColor);
+				g.setColor(world.colorCollection.wallColor);
 				g.fillRect(0, 0, 6, 24);
 				return new ImageIcon(image);
 			},
@@ -112,7 +112,7 @@ public enum Tool {//TODO add a "place robot" tool?
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics g = image.createGraphics();
 
-				g.setColor(world.wallColor);
+				g.setColor(world.colorCollection.wallColor);
 				g.fillRect(0, 0, 24, 24);
 				return new ImageIcon(image);
 			},
@@ -162,7 +162,7 @@ public enum Tool {//TODO add a "place robot" tool?
 		this((a, b) -> {
 			BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 			Graphics g = image.createGraphics();
-			g.drawImage(staticImage, 0, 0, a.backgroundColor, null);
+			g.drawImage(staticImage, 0, 0, a.colorCollection.backgroundColor, null);
 			return new ImageIcon(image);
 		}, selector, modifier, toolTip);
 	}

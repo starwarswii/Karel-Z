@@ -16,28 +16,23 @@ public class World {
 	ArrayList<Robot> robots;
 	int width;
 	int height;
-	Color wallColor;
-	Color beeperColor;
-	Color beeperLabelColor;
-	Color lineColor;
-	Color backgroundColor;
+	WorldColorCollection colorCollection;
 
-	public World(int width, int height, Color wallColor, Color beeperColor, Color beeperLabelColor, Color lineColor, Color backgroundColor) {
+	public World(int width, int height, WorldColorCollection colorCollection) {
 		map = new HashMap<Point,Cell>();
 		robots = new ArrayList<Robot>();
 		this.width = width;
 		this.height = height;
-		this.wallColor = wallColor;
-		this.beeperColor = beeperColor;
-		this.beeperLabelColor = beeperLabelColor;
-		this.lineColor = lineColor;
-		this.backgroundColor = backgroundColor;
+		this.colorCollection = colorCollection;
 	}
 
 	public World(int width, int height) {
-		this(width, height, Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.WHITE);//default color values
+		this(width, height, WorldColorCollection.getDefaultWorldColorCollection());
 	}
 
+	public World(int width, int height, Color wallColor, Color beeperColor, Color beeperLabelColor, Color lineColor, Color backgroundColor) {
+		this(width, height, new WorldColorCollection(wallColor, beeperColor, beeperLabelColor, lineColor, backgroundColor));
+	}
 
 	public World(String path) {
 		loadWorld(path);
@@ -50,7 +45,7 @@ public class World {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void saveWorld(File file) {
 		try {
 			Files.write(Paths.get(file.toURI()), getWorldAsStringList());
@@ -66,7 +61,7 @@ public class World {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void loadWorld(File file) {
 		try {
 			loadWorldAsStringList(Files.readAllLines(Paths.get(file.toURI())));
@@ -75,28 +70,22 @@ public class World {
 		}
 	}
 
-	
 	public void loadKarelJRobotWorld(String path) {
 		//TODO complete translation of old world form to new
 	}
-	
+
 	public void loadWorldString(String worldString) {
 		loadWorldAsStringList(Arrays.asList(worldString.split("\n")));
 	}
 
-	//TODO add support for converting karel worlds to this new format maybe?
 	public void loadWorldAsStringList(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
-		
+		//TODO try catch, if any parse-ints fail, reset the world and popup a msgbox that say "invalid world file" or somthin
 		//completely reset this world. like calling the constructor again
 		map = new HashMap<Point,Cell>();
 		robots = new ArrayList<Robot>();
 		width = 0;
 		height = 0;
-		wallColor = Color.BLACK;
-		beeperColor = Color.BLACK;
-		beeperLabelColor = Color.WHITE;
-		lineColor = Color.BLACK;
-		backgroundColor = Color.WHITE;
+		colorCollection = WorldColorCollection.getDefaultWorldColorCollection();
 
 		lines.forEach(line -> {
 			String[] tokens = line.split(" ");
@@ -106,19 +95,19 @@ public class World {
 				height = Integer.parseInt(tokens[2]);
 				break;
 			case "wall-color":
-				wallColor = new Color(Integer.parseInt(tokens[1]));
+				colorCollection.wallColor = new Color(Integer.parseInt(tokens[1]));
 				break;
 			case "beeper-color":
-				beeperColor = new Color(Integer.parseInt(tokens[1]));
+				colorCollection.beeperColor = new Color(Integer.parseInt(tokens[1]));
 				break;
 			case "beeper-label-color":
-				beeperLabelColor = new Color(Integer.parseInt(tokens[1]));
+				colorCollection.beeperLabelColor = new Color(Integer.parseInt(tokens[1]));
 				break;
 			case "line-color":
-				lineColor = new Color(Integer.parseInt(tokens[1]));
+				colorCollection.lineColor = new Color(Integer.parseInt(tokens[1]));
 				break;
 			case "background-color":
-				backgroundColor = new Color(Integer.parseInt(tokens[1]));
+				colorCollection.backgroundColor = new Color(Integer.parseInt(tokens[1]));
 				break;
 			case "beeper-pile":
 				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBeeperPile(Integer.parseInt(tokens[3])));
@@ -139,27 +128,27 @@ public class World {
 		List<String> lines = new ArrayList<String>();
 
 		lines.add("world-size "+width+" "+height);
-		lines.add("wall-color "+Integer.toString(wallColor.getRGB()));
-		lines.add("beeper-color "+Integer.toString(beeperColor.getRGB()));
-		lines.add("beeper-label-color "+Integer.toString(beeperLabelColor.getRGB()));
-		lines.add("line-color "+Integer.toString(lineColor.getRGB()));
-		lines.add("background-color "+Integer.toString(backgroundColor.getRGB()));
+		lines.add("wall-color "+Integer.toString(colorCollection.wallColor.getRGB()));
+		lines.add("beeper-color "+Integer.toString(colorCollection.beeperColor.getRGB()));
+		lines.add("beeper-label-color "+Integer.toString(colorCollection.beeperLabelColor.getRGB()));
+		lines.add("line-color "+Integer.toString(colorCollection.lineColor.getRGB()));
+		lines.add("background-color "+Integer.toString(colorCollection.backgroundColor.getRGB()));
 
-		map.forEach((a, b) -> {
-			if (b.containsValidBeeperPile()) {
-				lines.add("beeper-pile "+a.x+" "+a.y+" "+b.beepers);
+		map.forEach((point, cell) -> {
+			if (cell.containsValidBeeperPile()) {
+				lines.add("beeper-pile "+point.x+" "+point.y+" "+cell.beepers);
 			}
 
-			if (b.containsHorizontalWall()) {
-				lines.add("horizontal-wall "+a.x+" "+a.y);
+			if (cell.containsHorizontalWall()) {
+				lines.add("horizontal-wall "+point.x+" "+point.y);
 			}
 
-			if (b.containsVerticalWall()) {
-				lines.add("vertical-wall "+a.x+" "+a.y);
+			if (cell.containsVerticalWall()) {
+				lines.add("vertical-wall "+point.x+" "+point.y);
 			}
 
-			if (b.containsBlockWall()) {
-				lines.add("block-wall "+a.x+" "+a.y);
+			if (cell.containsBlockWall()) {
+				lines.add("block-wall "+point.x+" "+point.y);
 			}
 		});
 
@@ -210,6 +199,5 @@ public class World {
 		robots.add(robot);
 		robot.world = this;
 	}
-
 
 }
