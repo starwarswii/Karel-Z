@@ -16,8 +16,7 @@ import static karelz.Window.WALL_THICKNESS;
 
 public enum Tool {//TODO add a "place robot" tool?
 
-	//TODO fill tooltips out
-	PAN_AND_ZOOM(ToolImageOverlay.PAN_AND_ZOOM_OVERLAY, "TODO"),
+	PAN_AND_ZOOM(ToolImageOverlay.PAN_AND_ZOOM_OVERLAY, "Pan and Zoom"),
 
 	BEEPER_PILE(
 			(world, beepers) -> {//generate icon
@@ -57,7 +56,7 @@ public enum Tool {//TODO add a "place robot" tool?
 
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newBeeperPile(beepers), remove),//modify world
 
-			"TODO"
+			"Place beeper pile"
 
 			),
 
@@ -80,7 +79,7 @@ public enum Tool {//TODO add a "place robot" tool?
 
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newHorizontalWall(), remove),//modify world
 
-			"TODO"
+			"Place horizontal wall"
 
 			),
 
@@ -103,7 +102,7 @@ public enum Tool {//TODO add a "place robot" tool?
 
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newVerticalWall(), remove),//modify world
 
-			"TODO"
+			"Place vertical wall"
 
 			),
 
@@ -124,7 +123,7 @@ public enum Tool {//TODO add a "place robot" tool?
 
 			(world, point, beepers, remove) -> addOrRemove(world, point, Cell.newBlockWall(), remove),//modify world
 
-			"TODO"
+			"Place block wall"
 
 			),
 
@@ -138,7 +137,7 @@ public enum Tool {//TODO add a "place robot" tool?
 
 			(world, point, beepers, remove) -> world.removeAll(point),//modify world
 
-			"TODO"
+			"Eraser"
 
 			);
 
@@ -159,10 +158,10 @@ public enum Tool {//TODO add a "place robot" tool?
 	}
 
 	Tool(BufferedImage staticImage, PaintStrategy selector, WorldModifier modifier, String toolTip) {//for ERASER
-		this((a, b) -> {
+		this((world, beepers) -> {
 			BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 			Graphics g = image.createGraphics();
-			g.drawImage(staticImage, 0, 0, a.colorCollection.backgroundColor, null);
+			g.drawImage(staticImage, 0, 0, world.colorCollection.backgroundColor, null);
 			return new ImageIcon(image);
 		}, selector, modifier, toolTip);
 	}
