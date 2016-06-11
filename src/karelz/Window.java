@@ -30,12 +30,12 @@ import java.util.TimerTask;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -43,7 +43,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSpinner;
 import javax.swing.JToolBar;
 import javax.swing.JToolBar.Separator;
 import javax.swing.KeyStroke;
@@ -52,7 +51,6 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.DefaultFormatter;
 
 @SuppressWarnings("serial")
 public class Window extends JFrame {//represents an object that displays and updates a world
@@ -71,12 +69,17 @@ public class Window extends JFrame {//represents an object that displays and upd
 	PanAndZoomPanel panel;
 	int delay;
 
-	ToolButton currentToolButton;
-	JComponent[] beeperComponents;
+	boolean playing;
+	ArrayList<Robot> runningRobots;
+	Timer timer;
+	TimerTask currentTask;
 
 	JToolBar toolBar;
+
+	ToolButton currentToolButton;
+	JComponent[] beeperComponents;
 	JCheckBox infiniteCheckBox;
-	JSpinner beeperSpinner;
+	ScrollSpinner beeperSpinner;
 
 	JPanel wallPanel;
 	JPanel beeperPanel;
@@ -90,19 +93,30 @@ public class Window extends JFrame {//represents an object that displays and upd
 	ExtensionFileChooser fileChooser;
 	JMenuItem saveButton;
 
-
-	public Window(World aWorld, int delay) {
-		this(aWorld, delay, false);
+	public Window(World aWorld) {
+		this(aWorld, 100);
 	}
 
-	public Window(World aWorld, int delay, boolean showWorldEditor) {
+	public Window(World world, int delay) {
+		this(world, delay, false);
+	}
+
+	public Window(World world, boolean showEditorTools) {
+		this(world, 100, showEditorTools);
+	}
+
+	public Window(World world, int delay, boolean showEditorTools) {
+		this(world, delay, showEditorTools, false);
+	}
+
+	public Window(World aWorld, int delay, boolean showEditorTools, boolean showPlaybackTools) {
 		super("Karel-Z");
 
 		world = aWorld;
 		this.delay = delay;
 
 		//the +1's give a border of .5 cells, with 20 extra vertical pixels for the title bar
-		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20+(showWorldEditor ? 48 : 0), (int)SCREEN_SIZE.getHeight()));
+		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20+(showEditorTools ? 48 : 0), (int)SCREEN_SIZE.getHeight()));
 		setLocationRelativeTo(null);
 		setIconImage(Util.getImage("karel-on.png"));
 
@@ -224,472 +238,514 @@ public class Window extends JFrame {//represents an object that displays and upd
 		panel.setBackground(world.colorCollection.backgroundColor);
 		add(panel, BorderLayout.CENTER);
 
-		if (showWorldEditor) {
+		if (showEditorTools || showPlaybackTools) {
+
 			toolBar = new JToolBar();
 			toolBar.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 4));
 			toolBar.setFloatable(false);
-
-			ToolButton[] buttons = Tool.getButtons();
-			currentToolButton = buttons[0];
-			currentToolButton.setSelected(true);
-
-			ActionListener toolButtonListener = e -> {
-				panel.repaint();
-				currentToolButton.setSelected(false);
-				currentToolButton = (ToolButton)e.getSource();
-				currentToolButton.setSelected(true);
-				panel.panAndZoomListener.setEnabled(currentToolButton.tool == Tool.PAN_AND_ZOOM);
-				for (JComponent a : beeperComponents) {
-					a.setVisible(currentToolButton.tool == Tool.BEEPER_PILE);
-				}
-				//TODO maybe change how this works when adding robot tool if choose to, so something with the variable holding the currently active panel
-			};
-
-			for (ToolButton a : buttons) {
-				a.generateAndSetIcon(world, 1);
-				a.addActionListener(toolButtonListener);
-				toolBar.add(a);
-			}
-
-			JCheckBox paintModeCheckBox = new JCheckBox("Paint Mode", true);
-			toolBar.add(paintModeCheckBox);
-
-			beeperComponents = new JComponent[4];
-
-			//separator
-			beeperComponents[0] = new Separator(new Dimension(10, 24));
-
-			//spinner label
-			beeperComponents[1] = new JLabel("Number of Beepers");
-
-			beeperSpinner = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
-			beeperSpinner.setPreferredSize(new Dimension(40, 24));
-
-			//makes any edit to the spinner take effect immediately
-			((DefaultFormatter)((JFormattedTextField)beeperSpinner.getEditor().getComponent(0)).getFormatter()).setCommitsOnValidEdit(true);
-
-			//currentToolButton is known to be BEEPER_PILE
-			beeperSpinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world, (int)beeperSpinner.getValue()));
-
-			beeperSpinner.addMouseWheelListener(e -> {
-				if (beeperSpinner.isEnabled() && (int)beeperSpinner.getValue()-e.getWheelRotation() > 0) {
-					beeperSpinner.setValue((int)beeperSpinner.getValue()-e.getWheelRotation());
-				}
-			});
-			beeperComponents[2] = beeperSpinner;
-
-			infiniteCheckBox = new JCheckBox("Infinite");
-
-			infiniteCheckBox.addItemListener(e -> {
-				beeperSpinner.setEnabled(!infiniteCheckBox.isSelected());
-				//currentToolButton is known to be BEEPER_PILE
-				currentToolButton.generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
-			});
-			beeperComponents[3] = infiniteCheckBox;
-
-			for (JComponent a : beeperComponents) {
-				a.setVisible(false);
-				toolBar.add(a);
-			}
-
 			add(toolBar, BorderLayout.PAGE_END);
 
-			//Color Window
-			JFrame colorFrame = new JFrame("World Colors");
-			colorFrame.setBounds(0, 0, 418, 240);
-			colorFrame.setLocationRelativeTo(this);
-			colorFrame.setIconImage(getIconImage());
-			colorFrame.setResizable(false);
+			if (showPlaybackTools) {
+				ImageIcon playIcon = Util.getIcon("play.png");
+				ImageIcon pauseIcon = Util.getIcon("pause.png");
 
-			JLabel wallLabel = new JLabel("Wall Color");
-			JLabel beeperLabel = new JLabel("Beeper Color");
-			JLabel beeperLabelLabel = new JLabel("Beeper Label Color");
-			JLabel lineLabel = new JLabel("Line Color");
-			JLabel backgroundLabel = new JLabel("Background Color");
+				playing = false;
 
-			wallPanel = new JPanel();
-			wallPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			wallPanel.setBackground(world.colorCollection.wallColor);
+				JButton stepButton = new JButton(Util.getIcon("step.png"));
+				stepButton.addActionListener(e -> step());
 
-			beeperPanel = new JPanel();
-			beeperPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			beeperPanel.setBackground(world.colorCollection.beeperColor);
+				JLabel delayLabel = new JLabel("Tick Delay");
 
-			beeperLabelPanel = new JPanel();
-			beeperLabelPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			beeperLabelPanel.setBackground(world.colorCollection.beeperLabelColor);
+				ScrollSpinner delaySpinner = new ScrollSpinner(new SpinnerNumberModel(this.delay, 1, null, 1), true);
+				delaySpinner.setPreferredSize(new Dimension(40, 24));
+				delaySpinner.addChangeListener(e -> this.delay = (int)delaySpinner.getValue());
 
-			linePanel = new JPanel();
-			linePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			linePanel.setBackground(world.colorCollection.lineColor);
+				JButton playButton = new JButton(playIcon);
+				playButton.addActionListener(e -> {
+					stepButton.setEnabled(playing);
+					delaySpinner.setEnabled(playing);
+					delayLabel.setEnabled(playing);
 
-			backgroundPanel = new JPanel();
-			backgroundPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			backgroundPanel.setBackground(world.colorCollection.backgroundColor);
+					if (playing) {
+						playButton.setIcon(playIcon);
+						pause();
+					} else {
+						playButton.setIcon(pauseIcon);
+						play();
+					}
+					playing = !playing;
+				});
 
-			JButton wallButton = new JButton("Choose Color");
-			wallButton.setMargin(new Insets(2, 2, 2, 2));
-			wallButton.addActionListener(e -> {
-				Color color = JColorChooser.showDialog(colorFrame, "Choose a Wall Color", Color.BLACK);
-				if (color != null) {
-					wallPanel.setBackground(color);
+				toolBar.add(playButton);
+				toolBar.add(stepButton);
+				toolBar.add(delayLabel);
+				toolBar.add(delaySpinner);
+
+				if (showEditorTools) {
+					toolBar.add(new Separator(new Dimension(10, 24)));	
 				}
-			});
+			}
 
-			JButton beeperButton = new JButton("Choose Color");
-			beeperButton.setMargin(new Insets(2, 2, 2, 2));
-			beeperButton.addActionListener(e -> {
-				Color color = JColorChooser.showDialog(colorFrame, "Choose a Beeper Color", Color.BLACK);
-				if (color != null) {
-					beeperPanel.setBackground(color);
+			if (showEditorTools) {
+
+				ToolButton[] buttons = Tool.getButtons();
+				currentToolButton = buttons[0];
+				currentToolButton.setSelected(true);
+
+				ActionListener toolButtonListener = e -> {
+					panel.repaint();
+					currentToolButton.setSelected(false);
+					currentToolButton = (ToolButton)e.getSource();
+					currentToolButton.setSelected(true);
+					panel.panAndZoomListener.setEnabled(currentToolButton.tool == Tool.PAN_AND_ZOOM);
+					for (JComponent a : beeperComponents) {
+						a.setVisible(currentToolButton.tool == Tool.BEEPER_PILE);
+					}
+					//TODO maybe change how this works when adding robot tool if choose to, so something with the variable holding the currently active panel
+				};
+
+				for (ToolButton a : buttons) {
+					a.generateAndSetIcon(world, 1);
+					a.addActionListener(toolButtonListener);
+					toolBar.add(a);
 				}
-			});
 
-			JButton beeperLabelButton = new JButton("Choose Color");
-			beeperLabelButton.setMargin(new Insets(2, 2, 2, 2));
-			beeperLabelButton.addActionListener(e -> {
-				Color color = JColorChooser.showDialog(colorFrame, "Choose a Beeper Label Color", Color.WHITE);
-				if (color != null) {
-					beeperLabelPanel.setBackground(color);
+				JCheckBox paintModeCheckBox = new JCheckBox("Paint Mode", true);
+				toolBar.add(paintModeCheckBox);
+
+				beeperComponents = new JComponent[4];
+
+				//separator
+				beeperComponents[0] = new Separator(new Dimension(10, 24));
+
+				//spinner label
+				beeperComponents[1] = new JLabel("Number of Beepers");
+
+				beeperSpinner = new ScrollSpinner(new SpinnerNumberModel(1, 1, null, 1), true);
+				beeperSpinner.setPreferredSize(new Dimension(40, 24));
+
+				//currentToolButton is known to be BEEPER_PILE
+				beeperSpinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world, (int)beeperSpinner.getValue()));
+
+				beeperComponents[2] = beeperSpinner;
+
+				infiniteCheckBox = new JCheckBox("Infinite");
+
+				infiniteCheckBox.addItemListener(e -> {
+					beeperSpinner.setEnabled(!infiniteCheckBox.isSelected());
+					//currentToolButton is known to be BEEPER_PILE
+					currentToolButton.generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
+				});
+				beeperComponents[3] = infiniteCheckBox;
+
+				for (JComponent a : beeperComponents) {
+					a.setVisible(false);
+					toolBar.add(a);
 				}
-			});
 
-			JButton lineButton = new JButton("Choose Color");
-			lineButton.setMargin(new Insets(2, 2, 2, 2));
-			lineButton.addActionListener(e -> {
-				Color color = JColorChooser.showDialog(colorFrame, "Choose a Line Color", Color.BLACK);
-				if (color != null) {
-					linePanel.setBackground(color);
-				}
-			});
+				//Color Window
+				JFrame colorFrame = new JFrame("World Colors");
+				colorFrame.setBounds(0, 0, 418, 240);
+				colorFrame.setLocationRelativeTo(this);
+				colorFrame.setIconImage(getIconImage());
+				colorFrame.setResizable(false);
 
-			JButton backgroundButton = new JButton("Choose Color");
-			backgroundButton.setMargin(new Insets(2, 2, 2, 2));
-			backgroundButton.addActionListener(e -> {
-				Color color = JColorChooser.showDialog(colorFrame, "Choose a Background Color", Color.WHITE);
-				if (color != null) {
-					backgroundPanel.setBackground(color);
-				}
-			});
+				JLabel wallLabel = new JLabel("Wall Color");
+				JLabel beeperLabel = new JLabel("Beeper Color");
+				JLabel beeperLabelLabel = new JLabel("Beeper Label Color");
+				JLabel lineLabel = new JLabel("Line Color");
+				JLabel backgroundLabel = new JLabel("Background Color");
 
-			JButton colorOkButton = new JButton("OK");
-			colorOkButton.addActionListener(e -> {
-				updateWorldColors(new WorldColorCollection(wallPanel.getBackground(), beeperPanel.getBackground(), beeperLabelPanel.getBackground(), linePanel.getBackground(), backgroundPanel.getBackground()));
-				updateDirty(true);
-				colorFrame.setVisible(false);
-			});
+				wallPanel = new JPanel();
+				wallPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				wallPanel.setBackground(world.colorCollection.wallColor);
 
-			JButton colorCancelButton = new JButton("Cancel");
-			colorCancelButton.addActionListener(e -> colorFrame.setVisible(false));
+				beeperPanel = new JPanel();
+				beeperPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				beeperPanel.setBackground(world.colorCollection.beeperColor);
 
-			JButton resetButton = new JButton("Reset World Colors");
-			resetButton.addActionListener(e -> {
-				updateWorldColors(WorldColorCollection.getDefaultWorldColorCollection());
-				updateDirty(true);
-				colorFrame.setVisible(false);
-			});
+				beeperLabelPanel = new JPanel();
+				beeperLabelPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				beeperLabelPanel.setBackground(world.colorCollection.beeperLabelColor);
 
-			//generated code, don't touch
-			GroupLayout colorLayout = new GroupLayout(colorFrame.getContentPane());
-			colorLayout.setHorizontalGroup(
-					colorLayout.createParallelGroup(Alignment.LEADING)
-					.addGroup(colorLayout.createSequentialGroup()
-							.addContainerGap()
-							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-									.addGroup(colorLayout.createSequentialGroup()
-											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-													.addComponent(wallLabel)
-													.addComponent(beeperLabel)
-													.addComponent(beeperLabelLabel)
-													.addComponent(lineLabel)
-													.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 84, GroupLayout.PREFERRED_SIZE))
-											.addGap(67)
-											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-													.addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-													.addComponent(linePanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-													.addComponent(beeperLabelPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-													.addComponent(beeperPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-													.addComponent(wallPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)))
-									.addGroup(colorLayout.createSequentialGroup()
-											.addComponent(colorOkButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(colorCancelButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 127, GroupLayout.PREFERRED_SIZE)))
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
-									.addComponent(beeperButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-									.addComponent(beeperLabelButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-									.addComponent(lineButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-									.addComponent(backgroundButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-									.addComponent(wallButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-							.addGap(12))
-					);
-			colorLayout.setVerticalGroup(
-					colorLayout.createParallelGroup(Alignment.TRAILING)
-					.addGroup(colorLayout.createSequentialGroup()
-							.addContainerGap()
-							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-									.addComponent(wallPanel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
-									.addComponent(wallLabel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
-									.addComponent(wallButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
-									.addComponent(beeperPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-									.addComponent(beeperLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-									.addComponent(beeperButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-									.addGroup(colorLayout.createSequentialGroup()
-											.addComponent(beeperLabelLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(lineLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-									.addGroup(colorLayout.createSequentialGroup()
-											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-													.addComponent(beeperLabelPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-													.addComponent(beeperLabelButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-													.addComponent(linePanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-													.addComponent(lineButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-													.addComponent(backgroundButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-													.addComponent(backgroundPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))))
-							.addGap(18)
-							.addGroup(colorLayout.createParallelGroup(Alignment.BASELINE, false)
-									.addComponent(colorCancelButton)
-									.addComponent(colorOkButton)
-									.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
-							.addContainerGap())
-					);
-			colorFrame.getContentPane().setLayout(colorLayout);
+				linePanel = new JPanel();
+				linePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				linePanel.setBackground(world.colorCollection.lineColor);
 
-			//Size Window
-			//defined first so sizeFrame anonymous class can access them
-			JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(world.width, 1, null, 1));
-			JSpinner heightSpinner = new JSpinner(new SpinnerNumberModel(world.height, 1, null, 1));
+				backgroundPanel = new JPanel();
+				backgroundPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+				backgroundPanel.setBackground(world.colorCollection.backgroundColor);
 
-			JFrame sizeFrame = new JFrame("World Size") {
-				public void setVisible(boolean b) {
-					if (newWorld && !b) {
-						world = new World(20, 20);
+				JButton wallButton = new JButton("Choose Color");
+				wallButton.setMargin(new Insets(2, 2, 2, 2));
+				wallButton.addActionListener(e -> {
+					Color color = JColorChooser.showDialog(colorFrame, "Choose a Wall Color", Color.BLACK);
+					if (color != null) {
+						wallPanel.setBackground(color);
+					}
+				});
+
+				JButton beeperButton = new JButton("Choose Color");
+				beeperButton.setMargin(new Insets(2, 2, 2, 2));
+				beeperButton.addActionListener(e -> {
+					Color color = JColorChooser.showDialog(colorFrame, "Choose a Beeper Color", Color.BLACK);
+					if (color != null) {
+						beeperPanel.setBackground(color);
+					}
+				});
+
+				JButton beeperLabelButton = new JButton("Choose Color");
+				beeperLabelButton.setMargin(new Insets(2, 2, 2, 2));
+				beeperLabelButton.addActionListener(e -> {
+					Color color = JColorChooser.showDialog(colorFrame, "Choose a Beeper Label Color", Color.WHITE);
+					if (color != null) {
+						beeperLabelPanel.setBackground(color);
+					}
+				});
+
+				JButton lineButton = new JButton("Choose Color");
+				lineButton.setMargin(new Insets(2, 2, 2, 2));
+				lineButton.addActionListener(e -> {
+					Color color = JColorChooser.showDialog(colorFrame, "Choose a Line Color", Color.BLACK);
+					if (color != null) {
+						linePanel.setBackground(color);
+					}
+				});
+
+				JButton backgroundButton = new JButton("Choose Color");
+				backgroundButton.setMargin(new Insets(2, 2, 2, 2));
+				backgroundButton.addActionListener(e -> {
+					Color color = JColorChooser.showDialog(colorFrame, "Choose a Background Color", Color.WHITE);
+					if (color != null) {
+						backgroundPanel.setBackground(color);
+					}
+				});
+
+				JButton colorOkButton = new JButton("OK");
+				colorOkButton.addActionListener(e -> {
+					updateWorldColors(new WorldColorCollection(wallPanel.getBackground(), beeperPanel.getBackground(), beeperLabelPanel.getBackground(), linePanel.getBackground(), backgroundPanel.getBackground()));
+					updateDirty(true);
+					colorFrame.setVisible(false);
+				});
+
+				JButton colorCancelButton = new JButton("Cancel");
+				colorCancelButton.addActionListener(e -> colorFrame.setVisible(false));
+
+				JButton resetButton = new JButton("Reset World Colors");
+				resetButton.addActionListener(e -> {
+					updateWorldColors(WorldColorCollection.getDefaultWorldColorCollection());
+					updateDirty(true);
+					colorFrame.setVisible(false);
+				});
+
+				//generated code, don't touch
+				GroupLayout colorLayout = new GroupLayout(colorFrame.getContentPane());
+				colorLayout.setHorizontalGroup(
+						colorLayout.createParallelGroup(Alignment.LEADING)
+						.addGroup(colorLayout.createSequentialGroup()
+								.addContainerGap()
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+										.addGroup(colorLayout.createSequentialGroup()
+												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+														.addComponent(wallLabel)
+														.addComponent(beeperLabel)
+														.addComponent(beeperLabelLabel)
+														.addComponent(lineLabel)
+														.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 84, GroupLayout.PREFERRED_SIZE))
+												.addGap(67)
+												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+														.addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+														.addComponent(linePanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+														.addComponent(beeperLabelPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+														.addComponent(beeperPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+														.addComponent(wallPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)))
+										.addGroup(colorLayout.createSequentialGroup()
+												.addComponent(colorOkButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(colorCancelButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 127, GroupLayout.PREFERRED_SIZE)))
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
+										.addComponent(beeperButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+										.addComponent(beeperLabelButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+										.addComponent(lineButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+										.addComponent(backgroundButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+										.addComponent(wallButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+								.addGap(12))
+						);
+				colorLayout.setVerticalGroup(
+						colorLayout.createParallelGroup(Alignment.TRAILING)
+						.addGroup(colorLayout.createSequentialGroup()
+								.addContainerGap()
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+										.addComponent(wallPanel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
+										.addComponent(wallLabel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
+										.addComponent(wallButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
+										.addComponent(beeperPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+										.addComponent(beeperLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+										.addComponent(beeperButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+										.addGroup(colorLayout.createSequentialGroup()
+												.addComponent(beeperLabelLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(lineLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+										.addGroup(colorLayout.createSequentialGroup()
+												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+														.addComponent(beeperLabelPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+														.addComponent(beeperLabelButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+														.addComponent(linePanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+														.addComponent(lineButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+														.addComponent(backgroundButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+														.addComponent(backgroundPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))))
+								.addGap(18)
+								.addGroup(colorLayout.createParallelGroup(Alignment.BASELINE, false)
+										.addComponent(colorCancelButton)
+										.addComponent(colorOkButton)
+										.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
+								.addContainerGap())
+						);
+				colorFrame.getContentPane().setLayout(colorLayout);
+
+				//Size Window
+				//defined first so sizeFrame anonymous class can access them
+				ScrollSpinner widthSpinner = new ScrollSpinner(new SpinnerNumberModel(world.width, 1, null, 1));
+				ScrollSpinner heightSpinner = new ScrollSpinner(new SpinnerNumberModel(world.height, 1, null, 1));
+
+				JFrame sizeFrame = new JFrame("World Size") {
+					public void setVisible(boolean b) {
+						if (newWorld && !b) {
+							world = new World(20, 20);
+							panel.resetPanAndZoom();
+							updateWorldColors(world.colorCollection);
+							updateDirty(false);
+							newWorld = false;
+							panel.repaint();
+						}
+						super.setVisible(b);
+					}
+				};
+				sizeFrame.setBounds(0, 0, 252, 135);
+				sizeFrame.setLocationRelativeTo(this);
+				sizeFrame.setIconImage(getIconImage());
+				sizeFrame.setResizable(false);
+
+				JLabel widthLabel = new JLabel("Width");
+				JLabel heightLabel = new JLabel("Height");
+
+				widthSpinner.addMouseWheelListener(e -> {
+					if ((int)widthSpinner.getValue()-e.getWheelRotation() > 0) {
+						widthSpinner.setValue((int)widthSpinner.getValue()-e.getWheelRotation());
+					}
+				});
+
+				heightSpinner.addMouseWheelListener(e -> {
+					if ((int)heightSpinner.getValue()-e.getWheelRotation() > 0) {
+						heightSpinner.setValue((int)heightSpinner.getValue()-e.getWheelRotation());
+					}
+				});
+
+				JButton sizeOkButton = new JButton("OK");
+				sizeOkButton.addActionListener(e -> {
+					if (newWorld) {
+						world = new World((int)widthSpinner.getValue(), (int)heightSpinner.getValue());
 						panel.resetPanAndZoom();
 						updateWorldColors(world.colorCollection);
 						updateDirty(false);
 						newWorld = false;
+					} else {
+						world.width = (int)widthSpinner.getValue();
+						world.height = (int)heightSpinner.getValue();
+						updateDirty(true);
+					}
+					panel.repaint();
+					sizeFrame.setVisible(false);
+				});
+
+				JButton sizeCancelButton = new JButton("Cancel");
+				sizeCancelButton.addActionListener(e -> {
+					sizeFrame.setVisible(false);
+				});
+
+				//generated code, don't touch
+				GroupLayout sizeLayout = new GroupLayout(sizeFrame.getContentPane());
+				sizeLayout.setHorizontalGroup(
+						sizeLayout.createParallelGroup(Alignment.LEADING)
+						.addGroup(sizeLayout.createSequentialGroup()
+								.addContainerGap()
+								.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
+										.addGroup(sizeLayout.createSequentialGroup()
+												.addComponent(widthLabel)
+												.addContainerGap(198, Short.MAX_VALUE))
+										.addGroup(sizeLayout.createSequentialGroup()
+												.addComponent(heightLabel)
+												.addContainerGap(195, Short.MAX_VALUE))
+										.addGroup(sizeLayout.createSequentialGroup()
+												.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
+														.addGroup(sizeLayout.createSequentialGroup()
+																.addGap(77)
+																.addGroup(sizeLayout.createParallelGroup(Alignment.LEADING)
+																		.addComponent(heightSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
+																		.addComponent(widthSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)))
+														.addGroup(Alignment.LEADING, sizeLayout.createSequentialGroup()
+																.addComponent(sizeOkButton)
+																.addPreferredGap(ComponentPlacement.RELATED)
+																.addComponent(sizeCancelButton)))
+												.addContainerGap(19, GroupLayout.PREFERRED_SIZE))))
+						);
+				sizeLayout.setVerticalGroup(
+						sizeLayout.createParallelGroup(Alignment.LEADING)
+						.addGroup(sizeLayout.createSequentialGroup()
+								.addContainerGap()
+								.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+										.addComponent(widthLabel)
+										.addComponent(widthSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+										.addComponent(heightLabel)
+										.addComponent(heightSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+								.addGap(18)
+								.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+										.addComponent(sizeOkButton)
+										.addComponent(sizeCancelButton))
+								.addContainerGap(13, Short.MAX_VALUE))
+						);
+				sizeFrame.getContentPane().setLayout(sizeLayout);
+
+				//Top Menu Bar
+				dirty = false;
+				newWorld = false;
+				saveFile = null;
+
+				JMenuBar menuBar = new JMenuBar();
+				setJMenuBar(menuBar);
+
+				JMenu fileMenu = new JMenu("File");
+				menuBar.add(fileMenu);
+
+				JMenu worldMenu = new JMenu("World");
+				menuBar.add(worldMenu);
+
+				JMenuItem newButton = new JMenuItem("New");
+				newButton.addActionListener(e -> {
+					if (saveWorld(false, true)) {
+						newWorld = true;
+						saveFile = null;
+						widthSpinner.setValue(20);
+						heightSpinner.setValue(20);
+						sizeFrame.setVisible(true);//sizeFrame and sizeOkButton handle new world creation because newWorld is true
+					}
+				});
+				newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
+				fileMenu.add(newButton);
+
+				//TODO if the filetype is .kwld, convert to karelz format
+				fileChooser = new ExtensionFileChooser(DIRECTORY, "kzw");
+				fileChooser.setFileFilter(new FileNameExtensionFilter("Karel Worlds", "txt", "kzw", "kwld"));
+
+
+				JMenuItem loadButton = new JMenuItem("Load");
+				loadButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
+				loadButton.addActionListener(e -> {
+					if (saveWorld(false, true) && fileChooser.showDialog(this, "Load") == JFileChooser.APPROVE_OPTION) {
+						saveFile = fileChooser.getSelectedFile();
+						world.loadWorld(saveFile);
+						panel.resetPanAndZoom();
+						updateWorldColors(world.colorCollection);
+						updateDirty(false);
+					}
+				});
+				fileMenu.add(loadButton);
+
+				saveButton = new JMenuItem("Save");
+				saveButton.setEnabled(false);//is enabled as soon as a change is made
+				saveButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+				saveButton.addActionListener(e -> saveWorld(false, false));
+				fileMenu.add(saveButton);
+
+				JMenuItem saveAsButton = new JMenuItem("Save As...");
+				saveAsButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
+				saveAsButton.addActionListener(e -> saveWorld(true, false));
+				fileMenu.add(saveAsButton);
+
+				JMenuItem exitButton = new JMenuItem("Exit");
+				exitButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
+				exitButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
+				fileMenu.add(exitButton);
+
+				JMenuItem editColorsButton = new JMenuItem("Edit Colors");
+				editColorsButton.addActionListener(e -> colorFrame.setVisible(true));
+				worldMenu.add(editColorsButton);
+
+				JMenuItem worldSizeButton = new JMenuItem("Edit World Size");
+				worldSizeButton.addActionListener(e -> {
+					widthSpinner.setValue(world.width);
+					heightSpinner.setValue(world.height);
+					sizeFrame.setVisible(true);
+				});
+				worldMenu.add(worldSizeButton);
+
+				//this listener handles object placing and deleting
+				MouseAdapter listener = new MouseAdapter() {
+
+					Point lastCellPointClicked = new Point(-1,-1);
+
+					public Point getCellPoint(MouseEvent e) {
+						Point2D.Float p = panel.panAndZoomListener.transformPoint(e.getPoint());
+						return new Point((int)p.x/CELL_SIZE, (int)p.y/CELL_SIZE);
+					}
+
+					public void placeObject(MouseEvent e) {
+						Point point = getCellPoint(e);
+						if (point.x >= 0 && point.y >= 0) {
+							Cell oldCell = new Cell(world.get(point));
+							currentToolButton.tool.modifyWorld(world, point, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue(), !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
+							if (!oldCell.equals(new Cell(world.get(point)))) {//if the cell was actually changed
+								updateDirty(true);
+							}
+						}
+						lastCellPointClicked = point;
 						panel.repaint();
 					}
-					super.setVisible(b);
-				}
-			};
-			sizeFrame.setBounds(0, 0, 252, 135);
-			sizeFrame.setLocationRelativeTo(this);
-			sizeFrame.setIconImage(getIconImage());
-			sizeFrame.setResizable(false);
-
-			JLabel widthLabel = new JLabel("Width");
-			JLabel heightLabel = new JLabel("Height");
-
-			widthSpinner.addMouseWheelListener(e -> {
-				if ((int)widthSpinner.getValue()-e.getWheelRotation() > 0) {
-					widthSpinner.setValue((int)widthSpinner.getValue()-e.getWheelRotation());
-				}
-			});
-
-			heightSpinner.addMouseWheelListener(e -> {
-				if ((int)heightSpinner.getValue()-e.getWheelRotation() > 0) {
-					heightSpinner.setValue((int)heightSpinner.getValue()-e.getWheelRotation());
-				}
-			});
-
-			JButton sizeOkButton = new JButton("OK");
-			sizeOkButton.addActionListener(e -> {
-				if (newWorld) {
-					world = new World((int)widthSpinner.getValue(), (int)heightSpinner.getValue());
-					panel.resetPanAndZoom();
-					updateWorldColors(world.colorCollection);
-					updateDirty(false);
-					newWorld = false;
-				} else {
-					world.width = (int)widthSpinner.getValue();
-					world.height = (int)heightSpinner.getValue();
-					updateDirty(true);
-				}
-				panel.repaint();
-				sizeFrame.setVisible(false);
-			});
-
-			JButton sizeCancelButton = new JButton("Cancel");
-			sizeCancelButton.addActionListener(e -> {
-				sizeFrame.setVisible(false);
-			});
-
-			//generated code, don't touch
-			GroupLayout sizeLayout = new GroupLayout(sizeFrame.getContentPane());
-			sizeLayout.setHorizontalGroup(
-					sizeLayout.createParallelGroup(Alignment.LEADING)
-					.addGroup(sizeLayout.createSequentialGroup()
-							.addContainerGap()
-							.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
-									.addGroup(sizeLayout.createSequentialGroup()
-											.addComponent(widthLabel)
-											.addContainerGap(198, Short.MAX_VALUE))
-									.addGroup(sizeLayout.createSequentialGroup()
-											.addComponent(heightLabel)
-											.addContainerGap(195, Short.MAX_VALUE))
-									.addGroup(sizeLayout.createSequentialGroup()
-											.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
-													.addGroup(sizeLayout.createSequentialGroup()
-															.addGap(77)
-															.addGroup(sizeLayout.createParallelGroup(Alignment.LEADING)
-																	.addComponent(heightSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-																	.addComponent(widthSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)))
-													.addGroup(Alignment.LEADING, sizeLayout.createSequentialGroup()
-															.addComponent(sizeOkButton)
-															.addPreferredGap(ComponentPlacement.RELATED)
-															.addComponent(sizeCancelButton)))
-											.addContainerGap(19, GroupLayout.PREFERRED_SIZE))))
-					);
-			sizeLayout.setVerticalGroup(
-					sizeLayout.createParallelGroup(Alignment.LEADING)
-					.addGroup(sizeLayout.createSequentialGroup()
-							.addContainerGap()
-							.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
-									.addComponent(widthLabel)
-									.addComponent(widthSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
-									.addComponent(heightLabel)
-									.addComponent(heightSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-							.addGap(18)
-							.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
-									.addComponent(sizeOkButton)
-									.addComponent(sizeCancelButton))
-							.addContainerGap(13, Short.MAX_VALUE))
-					);
-			sizeFrame.getContentPane().setLayout(sizeLayout);
-
-			//Top Menu Bar
-			dirty = false;
-			newWorld = false;
-			saveFile = null;
-
-			JMenuBar menuBar = new JMenuBar();
-			setJMenuBar(menuBar);
-
-			JMenu fileMenu = new JMenu("File");
-			menuBar.add(fileMenu);
-
-			JMenu worldMenu = new JMenu("World");
-			menuBar.add(worldMenu);
-
-			JMenuItem newButton = new JMenuItem("New");
-			newButton.addActionListener(e -> {
-				if (saveWorld(false, true)) {
-					newWorld = true;
-					saveFile = null;
-					widthSpinner.setValue(20);
-					heightSpinner.setValue(20);
-					sizeFrame.setVisible(true);//sizeFrame and sizeOkButton handle new world creation because newWorld is true
-				}
-			});
-			newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
-			fileMenu.add(newButton);
-
-			//TODO if the filetype is .kwld, convert to karelz format
-			fileChooser = new ExtensionFileChooser(DIRECTORY, "kzw");
-			fileChooser.setFileFilter(new FileNameExtensionFilter("Karel Worlds", "txt", "kzw", "kwld"));
 
 
-			JMenuItem loadButton = new JMenuItem("Load");
-			loadButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
-			loadButton.addActionListener(e -> {
-				if (saveWorld(false, true) && fileChooser.showDialog(this, "Load") == JFileChooser.APPROVE_OPTION) {
-					saveFile = fileChooser.getSelectedFile();
-					world.loadWorld(saveFile);
-					panel.resetPanAndZoom();
-					updateWorldColors(world.colorCollection);
-					updateDirty(false);
-				}
-			});
-			fileMenu.add(loadButton);
-
-			saveButton = new JMenuItem("Save");
-			saveButton.setEnabled(false);//is enabled as soon as a change is made
-			saveButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
-			saveButton.addActionListener(e -> saveWorld(false, false));
-			fileMenu.add(saveButton);
-
-			JMenuItem saveAsButton = new JMenuItem("Save As...");
-			saveAsButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
-			saveAsButton.addActionListener(e -> saveWorld(true, false));
-			fileMenu.add(saveAsButton);
-
-			JMenuItem exitButton = new JMenuItem("Exit");
-			exitButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
-			exitButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
-			fileMenu.add(exitButton);
-
-			JMenuItem editColorsButton = new JMenuItem("Edit Colors");
-			editColorsButton.addActionListener(e -> colorFrame.setVisible(true));
-			worldMenu.add(editColorsButton);
-
-			JMenuItem worldSizeButton = new JMenuItem("Edit World Size");
-			worldSizeButton.addActionListener(e -> {
-				widthSpinner.setValue(world.width);
-				heightSpinner.setValue(world.height);
-				sizeFrame.setVisible(true);
-			});
-			worldMenu.add(worldSizeButton);
-
-			//this listener handles object placing and deleting
-			MouseAdapter listener = new MouseAdapter() {
-
-				Point lastCellPointClicked = new Point(-1,-1);
-
-				public Point getCellPoint(MouseEvent e) {
-					Point2D.Float p = panel.panAndZoomListener.transformPoint(e.getPoint());
-					return new Point((int)p.x/CELL_SIZE, (int)p.y/CELL_SIZE);
-				}
-
-				public void placeObject(MouseEvent e) {
-					Point point = getCellPoint(e);
-					if (point.x >= 0 && point.y >= 0) {
-						Cell oldCell = new Cell(world.get(point));
-						currentToolButton.tool.modifyWorld(world, point, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue(), !SwingUtilities.isLeftMouseButton(e) && SwingUtilities.isRightMouseButton(e));
-						if (!oldCell.equals(new Cell(world.get(point)))) {//if the cell was actually changed
-							updateDirty(true);
+					public void mouseMoved(MouseEvent e) {
+						if (currentToolButton.tool != Tool.PAN_AND_ZOOM) {
+							panel.repaint();
 						}
 					}
-					lastCellPointClicked = point;
-					panel.repaint();
-				}
 
-
-				public void mouseMoved(MouseEvent e) {
-					if (currentToolButton.tool != Tool.PAN_AND_ZOOM) {
-						panel.repaint();
-					}
-				}
-
-				public void mousePressed(MouseEvent e) {
-					placeObject(e);
-				}
-
-				public void mouseDragged(MouseEvent e) {
-					if (!lastCellPointClicked.equals(getCellPoint(e)) && (paintModeCheckBox.isSelected() || currentToolButton.tool == Tool.ERASER)) {
+					public void mousePressed(MouseEvent e) {
 						placeObject(e);
 					}
-				}
-			};
 
-			panel.addMouseListener(listener);
-			panel.addMouseMotionListener(listener);
+					public void mouseDragged(MouseEvent e) {
+						if (!lastCellPointClicked.equals(getCellPoint(e)) && (paintModeCheckBox.isSelected() || currentToolButton.tool == Tool.ERASER)) {
+							placeObject(e);
+						}
+					}
+				};
 
+				panel.addMouseListener(listener);
+				panel.addMouseMotionListener(listener);
+
+			}
 		}
+
+		runningRobots = new ArrayList<Robot>(world.robots);
+
+		runningRobots.forEach(Robot::launchThread);
+
+		timer = new Timer();
 	}
 
 
@@ -763,54 +819,39 @@ public class Window extends JFrame {//represents an object that displays and upd
 		panel.repaint();
 	}
 
-	public void start() {//starts all the bots
-
-		ArrayList<Robot> runningRobots = new ArrayList<Robot>(world.robots);
-
-		runningRobots.forEach(Robot::launchThread);
-
-		if (delay > 0) {
-			Timer timer = new Timer();
-			timer.schedule(new TimerTask() {
-
-				public void run() {
-					for (int i = 0; i < runningRobots.size(); i++) {
-						Robot robot = runningRobots.get(i);
-						if (robot.threadIsActive) {
-							robot.step();
-						} else {
-							runningRobots.remove(i);
-							i--;
-						}
-					}
-					panel.repaint();
-
-					if (runningRobots.isEmpty()) {
-						timer.cancel();
+	public void play() {
+		currentTask = new TimerTask() {
+			public void run() {
+				for (int i = 0; i < runningRobots.size(); i++) {
+					Robot robot = runningRobots.get(i);
+					if (robot.threadIsActive) {
+						robot.step();
+					} else {
+						runningRobots.remove(i);
+						i--;
 					}
 				}
+				panel.repaint();
 
-			}, 0, delay);
-		} else {//needed as timer won't accept delay 0. this below just makes it run as fast as possible
-			Thread thread = new Thread(() -> {
-				while (true) {
-					for (int i = 0; i < runningRobots.size(); i++) {
-						Robot robot = runningRobots.get(i);
-						if (robot.threadIsActive) {
-							robot.step();
-						} else {
-							runningRobots.remove(i);
-							i--;
-						}
-					}
-					panel.repaint();
-
-					if (runningRobots.isEmpty()) {
-						break;
-					}
+				if (runningRobots.isEmpty()) {
+					this.cancel();
 				}
-			});
-			thread.start();
+			}
+		};
+		timer.schedule(currentTask, 0, delay);
+	}
+
+	public void pause() {
+		currentTask.cancel();
+		timer.purge();
+	}
+
+	public void step() {
+		for (Robot a : runningRobots) {
+			if (a.threadIsActive) {
+				a.step();
+			}
 		}
+		panel.repaint();
 	}
 }

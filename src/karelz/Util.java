@@ -15,6 +15,7 @@ import javax.swing.ImageIcon;
 public class Util {
 
 	static final String RESOURCE_PATH = "resources/";
+	static final String WORLD_PATH = "src/worlds/";
 
 	public static BufferedImage getImage(String filename) {
 		try {
@@ -66,5 +67,9 @@ public class Util {
 
 	public static void sleep(long milliseconds) {
 		try {Thread.sleep(milliseconds);} catch (Exception e) {}
+	}
+
+	public static String path(String name) {
+		return WORLD_PATH+name;
 	}
 }

@@ -22,15 +22,20 @@ public class TestRobot2 extends Robot {
 	}
 
 	public void task() {
-		while (nextToABeeper()) {
-			pickBeeper();
-		}
-		move();
-		while (hasBeepers()) {
-			putBeeper();
+		iterate(1000, () -> {
 			move();
 			turnLeft();
-		}
-		turnOff();
+		});
+		
+//		while (nextToABeeper()) {
+//			pickBeeper();
+//		}
+//		move();
+//		while (hasBeepers()) {
+//			putBeeper();
+//			move();
+//			turnLeft();
+//		}
+//		turnOff();
 	}
 }
