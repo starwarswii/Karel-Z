@@ -1,0 +1,57 @@
+world-size 20 20
+wall-color -16777216
+beeper-color -16777216
+beeper-label-color -1
+line-color -16777216
+background-color -1
+block-wall 2 15
+block-wall 2 13
+block-wall 2 11
+block-wall 2 9
+block-wall 17 15
+block-wall 17 13
+block-wall 17 11
+block-wall 17 9
+block-wall 4 16
+block-wall 14 5
+block-wall 15 5
+block-wall 5 16
+block-wall 12 5
+block-wall 13 5
+block-wall 6 16
+block-wall 10 5
+block-wall 11 5
+block-wall 7 16
+block-wall 8 5
+block-wall 9 5
+block-wall 2 16
+block-wall 17 8
+block-wall 2 14
+block-wall 17 7
+block-wall 3 16
+block-wall 2 12
+block-wall 17 6
+block-wall 16 5
+block-wall 2 10
+block-wall 17 5
+block-wall 16 16
+block-wall 2 8
+block-wall 17 16
+block-wall 3 5
+block-wall 2 7
+block-wall 17 14
+block-wall 2 6
+block-wall 17 12
+block-wall 2 5
+block-wall 8 16
+block-wall 7 5
+block-wall 9 16
+block-wall 10 16
+block-wall 6 5
+block-wall 11 16
+block-wall 12 16
+block-wall 5 5
+block-wall 13 16
+block-wall 14 16
+block-wall 4 5
+block-wall 15 16

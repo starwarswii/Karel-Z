@@ -2,6 +2,6 @@ package karelz;
 
 public interface CodeBlock {
 
-	public void execute();
+	public void execute() throws EndTaskException;
 
 }

@@ -68,11 +68,15 @@ public class Window extends JFrame {//represents an object that displays and upd
 	World world;
 	PanAndZoomPanel panel;
 	int delay;
+	boolean showPlaybackTools;
+	long autoplayAfter;
 
 	boolean playing;
 	ArrayList<Robot> runningRobots;
 	Timer timer;
 	TimerTask currentTask;
+
+	JButton playButton;
 
 	JToolBar toolBar;
 
@@ -109,16 +113,22 @@ public class Window extends JFrame {//represents an object that displays and upd
 		this(world, delay, showEditorTools, false);
 	}
 
-	public Window(World aWorld, int delay, boolean showEditorTools, boolean showPlaybackTools) {
+	public Window(World world, int delay, boolean showEditorTools, boolean showPlaybackTools) {
+		this(world, delay, showEditorTools, showPlaybackTools, -1);
+	}
+
+	public Window(World aWorld, int delay, boolean showEditorTools, boolean showPlaybackTools, long autoplayAfter) {
 		super("Karel-Z");
 
 		world = aWorld;
-		this.delay = delay;
+		this.delay = Math.max(delay, 1);
+		this.showPlaybackTools = showPlaybackTools;
+		this.autoplayAfter = autoplayAfter;
 
 		//the +1's give a border of .5 cells, with 20 extra vertical pixels for the title bar
 		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20+(showEditorTools ? 48 : 0), (int)SCREEN_SIZE.getHeight()));
 		setLocationRelativeTo(null);
-		setIconImage(Util.getImage("karel-on.png"));
+		setIconImage(Util.getImage("icon.png"));
 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -257,10 +267,10 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JLabel delayLabel = new JLabel("Tick Delay");
 
 				ScrollSpinner delaySpinner = new ScrollSpinner(new SpinnerNumberModel(this.delay, 1, null, 1), true);
-				delaySpinner.setPreferredSize(new Dimension(40, 24));
+				delaySpinner.setPreferredSize(new Dimension(46, 24));
 				delaySpinner.addChangeListener(e -> this.delay = (int)delaySpinner.getValue());
 
-				JButton playButton = new JButton(playIcon);
+				playButton = new JButton(playIcon);
 				playButton.addActionListener(e -> {
 					stepButton.setEnabled(playing);
 					delaySpinner.setEnabled(playing);
@@ -741,26 +751,26 @@ public class Window extends JFrame {//represents an object that displays and upd
 			}
 		}
 
-		runningRobots = new ArrayList<Robot>(world.robots);
-
-		runningRobots.forEach(Robot::launchThread);
-
 		timer = new Timer();
+
+		runningRobots = new ArrayList<Robot>(world.robots);
+		runningRobots.forEach(Robot::launchThread);
 	}
 
 
 
-	//	public void setVisible(boolean b) {//todo this is evil
-	//		new Timer().scheduleAtFixedRate(new TimerTask() {
-	//
-	//			@Override
-	//			public void run() {
-	//				panel.repaint();
-	//			}
-	//			
-	//		}, 0, 500);
-	//		super.setVisible(b);
-	//	}
+	public void setVisible(boolean b) {
+		super.setVisible(b);
+		if (autoplayAfter >= 0 && b) {
+			Util.sleep(autoplayAfter);
+			if (showPlaybackTools) {
+				playButton.doClick(0);	
+			} else {
+				play();
+			}
+		}
+		//panel.repaint();
+	}
 
 	public boolean saveWorld(boolean saveAs, boolean confirm) {//returns false if should stop any future actions, like loading or exiting
 		if (dirty || saveAs) {

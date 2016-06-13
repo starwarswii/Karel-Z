@@ -3,7 +3,7 @@ package karelz;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-public abstract class Robot implements RobotTask {
+public abstract class Robot {
 	int x;
 	int y;
 	Direction direction;
@@ -44,14 +44,16 @@ public abstract class Robot implements RobotTask {
 	}
 
 	//this contains the robot's program
-	public abstract void task();
+	public abstract void task() throws EndTaskException;
 
 	void launchThread() {
 		threadIsActive = true;
 
 		thread = new Thread(() -> {
-			waitForTick();
-			task();
+			waitForStep();
+			try {
+				task();
+			} catch (EndTaskException e) {}
 			threadIsActive = false;
 			if (state != RobotState.ERROR) {
 				log("finished its task");	
@@ -64,7 +66,7 @@ public abstract class Robot implements RobotTask {
 		thread.interrupt();
 	}
 
-	void waitForTick() {
+	void waitForStep() {
 		while (threadIsActive) {
 			try {
 				Thread.sleep(30000);// 30 seconds
@@ -76,14 +78,15 @@ public abstract class Robot implements RobotTask {
 
 	void log(Object message) {
 		if (logging) {
-			System.out.println("A robot at ("+x+", "+y+") has "+message);
+			System.out.println("A "+getClass().getSimpleName()+" at ("+x+", "+y+") has "+message);
 		}
 	}
 
-	void crash(Object message) {
+	void crash(Object message) throws EndTaskException {
 		state = RobotState.ERROR;
 		threadIsActive = false;
 		log("crashed: "+message);
+		throw new EndTaskException();
 	}
 
 	BufferedImage getCurrentImage() {
@@ -178,33 +181,28 @@ public abstract class Robot implements RobotTask {
 	public boolean notFacingDown() {return !facingDown();}
 	public boolean notFacingLeft() {return !facingLeft();}
 
-	public void iterate(int times, CodeBlock code) {
+	public void iterate(int times, CodeBlock code) throws EndTaskException {
 		for (int i = 0; i < times && threadIsActive; i++) {
 			code.execute();
 		}
 	}
 
-	public void turnOn() {
-		if (state != RobotState.ERROR) {
-			state = RobotState.ON;
-			log("turned on");
-		}
-	}
-
-	public void turnOff() {
-		if (state != RobotState.ERROR) {
+	public void turnOff() throws EndTaskException {
+		if (state == RobotState.ON) {
 			state = RobotState.OFF;
+			threadIsActive = false;
 			log("turned off");
+			throw new EndTaskException();
 		}
 	}
 
 	public void sleep() {
-		if (state != RobotState.ERROR) {
-			waitForTick();
+		if (state == RobotState.ON) {
+			waitForStep();
 		}
 	}
 
-	public void move() {
+	public void move() throws EndTaskException {
 		if (state == RobotState.ON) {
 			if (frontIsClear()) {
 				switch (direction) {
@@ -223,18 +221,18 @@ public abstract class Robot implements RobotTask {
 			} else {
 				crash("Hit a wall");
 			}
-			waitForTick();
+			waitForStep();
 		}
 	}
 
 	public void turnLeft() {
 		if (state == RobotState.ON) {
 			direction = direction.getCounterclockwiseDirection();
-			waitForTick();
+			waitForStep();
 		}
 	}
 
-	public void putBeeper() {
+	public void putBeeper() throws EndTaskException {
 		if (state == RobotState.ON) {
 			if (hasBeepers() && beepers != Cell.INFINITY) {
 				beepers--;
@@ -242,11 +240,11 @@ public abstract class Robot implements RobotTask {
 			} else {
 				crash("Tried to put beeper when it didn't have one");
 			}
-			waitForTick();
+			waitForStep();
 		}
 	}
 
-	public void pickBeeper() {
+	public void pickBeeper() throws EndTaskException {
 		if (state == RobotState.ON) {
 			Cell currentCell = world.get(x, y);
 			if (currentCell.containsValidBeeperPile()) {
@@ -260,7 +258,7 @@ public abstract class Robot implements RobotTask {
 			} else {
 				crash("Tried to pick beeper when there was none");
 			}
-			waitForTick();	
+			waitForStep();	
 		}
 	}
 

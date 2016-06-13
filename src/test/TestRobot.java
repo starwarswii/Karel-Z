@@ -21,7 +21,7 @@ public class TestRobot extends Robot {
 		super(x, y, direction);
 	}
 
-	public void task() {
+	public void task() throws EndTaskException {
 		turnLeft();
 		move();
 		turnLeft();
@@ -32,9 +32,6 @@ public class TestRobot extends Robot {
 		move();
 		iterate(6, this::turnLeft);
 		//iterate(100000, this::turnLeft);//for testing delay 0
-//		iterate(12, () -> {
-//			//stuff
-//		});
 		turnOff();
 	}
 }
