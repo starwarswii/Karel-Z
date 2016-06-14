@@ -28,7 +28,7 @@ public class Cell {
 	public Cell() {
 		this(NO_MASK, 0);
 	}
-	
+
 	public Cell(Cell cell) {
 		this(cell.flags, cell.beepers);
 	}
@@ -36,11 +36,11 @@ public class Cell {
 	public int hashCode() {
 		return Objects.hash(flags, beepers);
 	}
-	
+
 	public boolean equals(Object object) {
 		return object instanceof Cell && flags == ((Cell)object).flags && beepers == ((Cell)object).beepers;
 	}
-	
+
 	public String toString() {
 		return "Flags: "+flags+", Beepers: "+beepers;
 	}
@@ -132,7 +132,7 @@ public class Cell {
 		}
 		return this;
 	}
-	
+
 	public static Cell combine(Cell... cells) {
 
 		Cell cell = new Cell();

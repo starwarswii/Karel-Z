@@ -16,7 +16,6 @@ public class RobotImageCollection {
 
 	BufferedImage[] images;
 
-
 	public RobotImageCollection() {
 		this(null);
 	}

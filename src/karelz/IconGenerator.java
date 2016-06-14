@@ -4,6 +4,6 @@ import javax.swing.ImageIcon;
 
 public interface IconGenerator {
 
-	public ImageIcon generate(World world, int beepers);
+	public ImageIcon generate(WorldColorCollection colorCollection, int beepers);
 
 }

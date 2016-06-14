@@ -19,18 +19,18 @@ public enum Tool {//TODO add a "place robot" tool?
 	PAN_AND_ZOOM(ToolImageOverlay.PAN_AND_ZOOM_OVERLAY, "Pan and Zoom"),
 
 	BEEPER_PILE(
-			(world, beepers) -> {//generate icon
+			(colorCollection, beepers) -> {//generate icon
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics2D g = image.createGraphics();
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-				g.setColor(world.colorCollection.backgroundColor);
+				g.setColor(colorCollection.backgroundColor);
 				g.fillRect(0, 0, 24, 24);
-				g.setColor(world.colorCollection.beeperColor);
+				g.setColor(colorCollection.beeperColor);
 				g.fillOval(0, 0, 24, 24);
 
 				if (beepers > 1 || beepers == Cell.INFINITY) {
-					g.setColor(world.colorCollection.beeperLabelColor);
+					g.setColor(colorCollection.beeperLabelColor);
 
 					Font font = new Font("Consolas", Font.PLAIN, 12);
 
@@ -61,13 +61,13 @@ public enum Tool {//TODO add a "place robot" tool?
 			),
 
 	HORIZONTAL_WALL(
-			(world, beepers) -> {//generate icon
+			(colorCollection, beepers) -> {//generate icon
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics g = image.createGraphics();
 
-				g.setColor(world.colorCollection.backgroundColor);
+				g.setColor(colorCollection.backgroundColor);
 				g.fillRect(0, 0, 24, 18);
-				g.setColor(world.colorCollection.wallColor);
+				g.setColor(colorCollection.wallColor);
 				g.fillRect(0, 18, 24, 6);
 				return new ImageIcon(image);
 			},
@@ -84,13 +84,13 @@ public enum Tool {//TODO add a "place robot" tool?
 			),
 
 	VERTICAL_WALL(
-			(world, beepers) -> {//generate icon
+			(colorCollection, beepers) -> {//generate icon
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics g = image.createGraphics();
 
-				g.setColor(world.colorCollection.backgroundColor);
+				g.setColor(colorCollection.backgroundColor);
 				g.fillRect(6, 0, 18, 24);
-				g.setColor(world.colorCollection.wallColor);
+				g.setColor(colorCollection.wallColor);
 				g.fillRect(0, 0, 6, 24);
 				return new ImageIcon(image);
 			},
@@ -107,11 +107,11 @@ public enum Tool {//TODO add a "place robot" tool?
 			),
 
 	BLOCK_WALL(
-			(world, beepers) -> {//generate icon
+			(colorCollection, beepers) -> {//generate icon
 				BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 				Graphics g = image.createGraphics();
 
-				g.setColor(world.colorCollection.wallColor);
+				g.setColor(colorCollection.wallColor);
 				g.fillRect(0, 0, 24, 24);
 				return new ImageIcon(image);
 			},
@@ -158,10 +158,10 @@ public enum Tool {//TODO add a "place robot" tool?
 	}
 
 	Tool(BufferedImage staticImage, PaintStrategy selector, WorldModifier modifier, String toolTip) {//for ERASER
-		this((world, beepers) -> {
+		this((colorCollection, beepers) -> {
 			BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_RGB);
 			Graphics g = image.createGraphics();
-			g.drawImage(staticImage, 0, 0, world.colorCollection.backgroundColor, null);
+			g.drawImage(staticImage, 0, 0, colorCollection.backgroundColor, null);
 			return new ImageIcon(image);
 		}, selector, modifier, toolTip);
 	}
@@ -174,8 +174,8 @@ public enum Tool {//TODO add a "place robot" tool?
 		}
 	}
 
-	public ImageIcon generateIcon(World world, int beepers) {
-		return generator.generate(world, beepers);
+	public ImageIcon generateIcon(WorldColorCollection colorCollection, int beepers) {
+		return generator.generate(colorCollection, beepers);
 	}
 
 	public void drawSelector(Graphics2D g, Point point) {

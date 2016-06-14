@@ -10,10 +10,10 @@ public class ScrollSpinner extends JSpinner {
 
 	public ScrollSpinner(SpinnerModel model, boolean commitsOnValidEdit) {
 		super(model);
-		
+
 		//disables comma separation e.g. 1,000
 		setEditor(new JSpinner.NumberEditor(this,"#"));
-		
+
 		//makes any edit to the spinner take effect immediately if commitsOnValidEdit is true
 		((DefaultFormatter)((JFormattedTextField)getEditor().getComponent(0)).getFormatter()).setCommitsOnValidEdit(commitsOnValidEdit);
 

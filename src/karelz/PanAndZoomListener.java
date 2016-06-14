@@ -112,7 +112,7 @@ public class PanAndZoomListener extends MouseAdapter {
 			}
 		}
 	}
-	
+
 	public void resetPanAndZoom() {
 		coordTransform = new AffineTransform(defaultTransform);
 		zoomLevel = 0;

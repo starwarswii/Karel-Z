@@ -13,7 +13,7 @@ public class ExtensionFileChooser extends JFileChooser {
 		super();
 		this.extension = extension;
 	}
-	
+
 	public ExtensionFileChooser(String currentDirectoryPath, String extension) {
 		super(currentDirectoryPath);
 		this.extension = extension;

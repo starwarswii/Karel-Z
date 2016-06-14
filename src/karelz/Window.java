@@ -315,7 +315,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				};
 
 				for (ToolButton a : buttons) {
-					a.generateAndSetIcon(world, 1);
+					a.generateAndSetIcon(world.colorCollection, 1);
 					a.addActionListener(toolButtonListener);
 					toolBar.add(a);
 				}
@@ -335,7 +335,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				beeperSpinner.setPreferredSize(new Dimension(40, 24));
 
 				//currentToolButton is known to be BEEPER_PILE
-				beeperSpinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world, (int)beeperSpinner.getValue()));
+				beeperSpinner.addChangeListener(e -> currentToolButton.generateAndSetIcon(world.colorCollection, (int)beeperSpinner.getValue()));
 
 				beeperComponents[2] = beeperSpinner;
 
@@ -344,7 +344,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				infiniteCheckBox.addItemListener(e -> {
 					beeperSpinner.setEnabled(!infiniteCheckBox.isSelected());
 					//currentToolButton is known to be BEEPER_PILE
-					currentToolButton.generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
+					currentToolButton.generateAndSetIcon(world.colorCollection, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
 				});
 				beeperComponents[3] = infiniteCheckBox;
 
@@ -821,7 +821,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 		//update tool icons
 		for (Component a : toolBar.getComponents()) {
 			if (a instanceof ToolButton) {
-				((ToolButton)a).generateAndSetIcon(world, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
+				((ToolButton)a).generateAndSetIcon(world.colorCollection, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
 			}
 		}
 
