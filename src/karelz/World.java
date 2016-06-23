@@ -34,6 +34,10 @@ public class World {
 		this(width, height, new WorldColorCollection(wallColor, beeperColor, beeperLabelColor, lineColor, backgroundColor));
 	}
 
+	public World(World world) {
+		loadWorld(world);
+	}
+
 	public World(String path) {
 		loadWorld(path);
 	}
@@ -52,6 +56,14 @@ public class World {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void loadWorld(World world) {
+		map = world.map;
+		robots = world.robots;
+		width = world.width;
+		height = world.height;
+		colorCollection = world.colorCollection;
 	}
 
 	public void loadWorld(String path) {

@@ -35,6 +35,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -62,6 +63,9 @@ public class Window extends JFrame {//represents an object that displays and upd
 	static final int EDGE_WALL_MULTIPLIER = 1;
 	static final int IMAGE_OFFSET = CELL_SIZE/7;
 
+	static final ImageIcon PLAY_ICON = Util.getIcon("play.png");
+	static final ImageIcon PAUSE_ICON = Util.getIcon("pause.png");
+
 	static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 	static final String DIRECTORY = System.getProperty("user.home")+"/Desktop";//starting location for loading and saving worlds
 
@@ -71,12 +75,18 @@ public class Window extends JFrame {//represents an object that displays and upd
 	boolean showPlaybackTools;
 	long autoplayAfter;
 
+	Timer refreshTimer;
+	TimerTask refreshTask;
+
 	boolean playing;
 	ArrayList<Robot> runningRobots;
-	Timer timer;
-	TimerTask currentTask;
+	Timer robotTimer;
+	TimerTask robotTask;
 
-	JButton playButton;
+	JButton playPauseButton;
+	JButton stepButton;
+	JLabel delayLabel;
+	ScrollSpinner delaySpinner;
 
 	JToolBar toolBar;
 
@@ -124,6 +134,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 		this.delay = Math.max(delay, 1);
 		this.showPlaybackTools = showPlaybackTools;
 		this.autoplayAfter = autoplayAfter;
+		playing = false;
 
 		//the +1's give a border of .5 cells, with 20 extra vertical pixels for the title bar
 		setBounds(0, 0, Math.min((world.width+1)*CELL_SIZE+WINDOW_MARGIN, (int)SCREEN_SIZE.getWidth()), Math.min((world.height+1)*CELL_SIZE+WINDOW_MARGIN+20+(showEditorTools ? 48 : 0), (int)SCREEN_SIZE.getHeight()));
@@ -256,37 +267,20 @@ public class Window extends JFrame {//represents an object that displays and upd
 			add(toolBar, BorderLayout.PAGE_END);
 
 			if (showPlaybackTools) {
-				ImageIcon playIcon = Util.getIcon("play.png");
-				ImageIcon pauseIcon = Util.getIcon("pause.png");
 
-				playing = false;
-
-				JButton stepButton = new JButton(Util.getIcon("step.png"));
+				stepButton = new JButton(Util.getIcon("step.png"));
 				stepButton.addActionListener(e -> step());
 
-				JLabel delayLabel = new JLabel("Tick Delay");
+				delayLabel = new JLabel("Tick Delay");
 
-				ScrollSpinner delaySpinner = new ScrollSpinner(new SpinnerNumberModel(this.delay, 1, null, 1), true);
+				delaySpinner = new ScrollSpinner(new SpinnerNumberModel(this.delay, 1, null, 1), true);
 				delaySpinner.setPreferredSize(new Dimension(46, 24));
 				delaySpinner.addChangeListener(e -> this.delay = (int)delaySpinner.getValue());
 
-				playButton = new JButton(playIcon);
-				playButton.addActionListener(e -> {
-					stepButton.setEnabled(playing);
-					delaySpinner.setEnabled(playing);
-					delayLabel.setEnabled(playing);
+				playPauseButton = new JButton(PLAY_ICON);
+				playPauseButton.addActionListener(e -> playPause());
 
-					if (playing) {
-						playButton.setIcon(playIcon);
-						pause();
-					} else {
-						playButton.setIcon(pauseIcon);
-						play();
-					}
-					playing = !playing;
-				});
-
-				toolBar.add(playButton);
+				toolBar.add(playPauseButton);
 				toolBar.add(stepButton);
 				toolBar.add(delayLabel);
 				toolBar.add(delaySpinner);
@@ -354,11 +348,11 @@ public class Window extends JFrame {//represents an object that displays and upd
 				}
 
 				//Color Window
-				JFrame colorFrame = new JFrame("World Colors");
-				colorFrame.setBounds(0, 0, 418, 240);
-				colorFrame.setLocationRelativeTo(this);
-				colorFrame.setIconImage(getIconImage());
-				colorFrame.setResizable(false);
+				JDialog colorDialog = new JDialog(this, "World Colors", true);
+				colorDialog.setBounds(0, 0, 418, 240);
+				colorDialog.setLocationRelativeTo(this);
+				colorDialog.setIconImage(getIconImage());
+				colorDialog.setResizable(false);
 
 				JLabel wallLabel = new JLabel("Wall Color");
 				JLabel beeperLabel = new JLabel("Beeper Color");
@@ -389,7 +383,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JButton wallButton = new JButton("Choose Color");
 				wallButton.setMargin(new Insets(2, 2, 2, 2));
 				wallButton.addActionListener(e -> {
-					Color color = JColorChooser.showDialog(colorFrame, "Choose a Wall Color", Color.BLACK);
+					Color color = JColorChooser.showDialog(colorDialog, "Choose a Wall Color", Color.BLACK);
 					if (color != null) {
 						wallPanel.setBackground(color);
 					}
@@ -398,7 +392,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JButton beeperButton = new JButton("Choose Color");
 				beeperButton.setMargin(new Insets(2, 2, 2, 2));
 				beeperButton.addActionListener(e -> {
-					Color color = JColorChooser.showDialog(colorFrame, "Choose a Beeper Color", Color.BLACK);
+					Color color = JColorChooser.showDialog(colorDialog, "Choose a Beeper Color", Color.BLACK);
 					if (color != null) {
 						beeperPanel.setBackground(color);
 					}
@@ -407,7 +401,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JButton beeperLabelButton = new JButton("Choose Color");
 				beeperLabelButton.setMargin(new Insets(2, 2, 2, 2));
 				beeperLabelButton.addActionListener(e -> {
-					Color color = JColorChooser.showDialog(colorFrame, "Choose a Beeper Label Color", Color.WHITE);
+					Color color = JColorChooser.showDialog(colorDialog, "Choose a Beeper Label Color", Color.WHITE);
 					if (color != null) {
 						beeperLabelPanel.setBackground(color);
 					}
@@ -416,7 +410,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JButton lineButton = new JButton("Choose Color");
 				lineButton.setMargin(new Insets(2, 2, 2, 2));
 				lineButton.addActionListener(e -> {
-					Color color = JColorChooser.showDialog(colorFrame, "Choose a Line Color", Color.BLACK);
+					Color color = JColorChooser.showDialog(colorDialog, "Choose a Line Color", Color.BLACK);
 					if (color != null) {
 						linePanel.setBackground(color);
 					}
@@ -425,7 +419,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JButton backgroundButton = new JButton("Choose Color");
 				backgroundButton.setMargin(new Insets(2, 2, 2, 2));
 				backgroundButton.addActionListener(e -> {
-					Color color = JColorChooser.showDialog(colorFrame, "Choose a Background Color", Color.WHITE);
+					Color color = JColorChooser.showDialog(colorDialog, "Choose a Background Color", Color.WHITE);
 					if (color != null) {
 						backgroundPanel.setBackground(color);
 					}
@@ -435,21 +429,21 @@ public class Window extends JFrame {//represents an object that displays and upd
 				colorOkButton.addActionListener(e -> {
 					updateWorldColors(new WorldColorCollection(wallPanel.getBackground(), beeperPanel.getBackground(), beeperLabelPanel.getBackground(), linePanel.getBackground(), backgroundPanel.getBackground()));
 					updateDirty(true);
-					colorFrame.setVisible(false);
+					colorDialog.setVisible(false);
 				});
 
 				JButton colorCancelButton = new JButton("Cancel");
-				colorCancelButton.addActionListener(e -> colorFrame.setVisible(false));
+				colorCancelButton.addActionListener(e -> colorDialog.setVisible(false));
 
 				JButton resetButton = new JButton("Reset World Colors");
 				resetButton.addActionListener(e -> {
 					updateWorldColors(WorldColorCollection.getDefaultWorldColorCollection());
 					updateDirty(true);
-					colorFrame.setVisible(false);
+					colorDialog.setVisible(false);
 				});
 
 				//generated code, don't touch
-				GroupLayout colorLayout = new GroupLayout(colorFrame.getContentPane());
+				GroupLayout colorLayout = new GroupLayout(colorDialog.getContentPane());
 				colorLayout.setHorizontalGroup(
 						colorLayout.createParallelGroup(Alignment.LEADING)
 						.addGroup(colorLayout.createSequentialGroup()
@@ -524,14 +518,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 										.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
 								.addContainerGap())
 						);
-				colorFrame.getContentPane().setLayout(colorLayout);
+				colorDialog.getContentPane().setLayout(colorLayout);
 
 				//Size Window
 				//defined first so sizeFrame anonymous class can access them
 				ScrollSpinner widthSpinner = new ScrollSpinner(new SpinnerNumberModel(world.width, 1, null, 1));
 				ScrollSpinner heightSpinner = new ScrollSpinner(new SpinnerNumberModel(world.height, 1, null, 1));
 
-				JFrame sizeFrame = new JFrame("World Size") {
+				JDialog sizeDialog = new JDialog(this, "World Size", true) {
 					public void setVisible(boolean b) {
 						if (newWorld && !b) {
 							world = new World(20, 20);
@@ -544,10 +538,10 @@ public class Window extends JFrame {//represents an object that displays and upd
 						super.setVisible(b);
 					}
 				};
-				sizeFrame.setBounds(0, 0, 252, 135);
-				sizeFrame.setLocationRelativeTo(this);
-				sizeFrame.setIconImage(getIconImage());
-				sizeFrame.setResizable(false);
+				sizeDialog.setBounds(0, 0, 252, 135);
+				sizeDialog.setLocationRelativeTo(this);
+				sizeDialog.setIconImage(getIconImage());
+				sizeDialog.setResizable(false);
 
 				JLabel widthLabel = new JLabel("Width");
 				JLabel heightLabel = new JLabel("Height");
@@ -578,16 +572,16 @@ public class Window extends JFrame {//represents an object that displays and upd
 						updateDirty(true);
 					}
 					panel.repaint();
-					sizeFrame.setVisible(false);
+					sizeDialog.setVisible(false);
 				});
 
 				JButton sizeCancelButton = new JButton("Cancel");
 				sizeCancelButton.addActionListener(e -> {
-					sizeFrame.setVisible(false);
+					sizeDialog.setVisible(false);
 				});
 
 				//generated code, don't touch
-				GroupLayout sizeLayout = new GroupLayout(sizeFrame.getContentPane());
+				GroupLayout sizeLayout = new GroupLayout(sizeDialog.getContentPane());
 				sizeLayout.setHorizontalGroup(
 						sizeLayout.createParallelGroup(Alignment.LEADING)
 						.addGroup(sizeLayout.createSequentialGroup()
@@ -629,7 +623,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 										.addComponent(sizeCancelButton))
 								.addContainerGap(13, Short.MAX_VALUE))
 						);
-				sizeFrame.getContentPane().setLayout(sizeLayout);
+				sizeDialog.getContentPane().setLayout(sizeLayout);
 
 				//Top Menu Bar
 				dirty = false;
@@ -648,11 +642,13 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JMenuItem newButton = new JMenuItem("New");
 				newButton.addActionListener(e -> {
 					if (saveWorld(false, true)) {
+						pause();
+						launchThreads();
 						newWorld = true;
 						saveFile = null;
 						widthSpinner.setValue(20);
 						heightSpinner.setValue(20);
-						sizeFrame.setVisible(true);//sizeFrame and sizeOkButton handle new world creation because newWorld is true
+						sizeDialog.setVisible(true);//sizeFrame and sizeOkButton handle new world creation because newWorld is true
 					}
 				});
 				newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
@@ -668,7 +664,9 @@ public class Window extends JFrame {//represents an object that displays and upd
 				loadButton.addActionListener(e -> {
 					if (saveWorld(false, true) && fileChooser.showDialog(this, "Load") == JFileChooser.APPROVE_OPTION) {
 						saveFile = fileChooser.getSelectedFile();
+						pause();
 						world.loadWorld(saveFile);
+						launchThreads();
 						panel.resetPanAndZoom();
 						updateWorldColors(world.colorCollection);
 						updateDirty(false);
@@ -693,14 +691,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 				fileMenu.add(exitButton);
 
 				JMenuItem editColorsButton = new JMenuItem("Edit Colors");
-				editColorsButton.addActionListener(e -> colorFrame.setVisible(true));
+				editColorsButton.addActionListener(e -> colorDialog.setVisible(true));
 				worldMenu.add(editColorsButton);
 
 				JMenuItem worldSizeButton = new JMenuItem("Edit World Size");
 				worldSizeButton.addActionListener(e -> {
 					widthSpinner.setValue(world.width);
 					heightSpinner.setValue(world.height);
-					sizeFrame.setVisible(true);
+					sizeDialog.setVisible(true);
 				});
 				worldMenu.add(worldSizeButton);
 
@@ -751,23 +749,33 @@ public class Window extends JFrame {//represents an object that displays and upd
 			}
 		}
 
-		timer = new Timer();
+		refreshTimer = new Timer();
 
-		runningRobots = new ArrayList<Robot>(world.robots);
-		runningRobots.forEach(Robot::launchThread);
+		robotTimer = new Timer();
+
+		launchThreads();
 	}
-
-
 
 	public void setVisible(boolean b) {
 		super.setVisible(b);
+
+		if (b) {
+			refreshTask = new TimerTask() {
+				public void run() {
+					panel.repaint();
+				}
+			};
+			refreshTimer.schedule(refreshTask, 0, 100);
+		} else if (refreshTask != null) {
+			refreshTask.cancel();
+			refreshTimer.purge();
+		}
+
 		if (autoplayAfter >= 0 && b) {
+
 			Util.sleep(autoplayAfter);
-			if (showPlaybackTools) {
-				playButton.doClick(0);	
-			} else {
-				play();
-			}
+
+			play();
 		}
 		//panel.repaint();
 	}
@@ -829,31 +837,65 @@ public class Window extends JFrame {//represents an object that displays and upd
 		panel.repaint();
 	}
 
-	public void play() {
-		currentTask = new TimerTask() {
-			public void run() {
-				for (int i = 0; i < runningRobots.size(); i++) {
-					Robot robot = runningRobots.get(i);
-					if (robot.threadIsActive) {
-						robot.step();
-					} else {
-						runningRobots.remove(i);
-						i--;
+	public void launchThreads() {
+		//pause();
+		runningRobots = new ArrayList<Robot>(world.robots);
+		runningRobots.forEach(Robot::launchThread);
+	}
+
+	public void playPause() {
+
+		if (showPlaybackTools) {
+			playPauseButton.setIcon(playing ? PLAY_ICON : PAUSE_ICON);
+			stepButton.setEnabled(playing);
+			delaySpinner.setEnabled(playing);
+			delayLabel.setEnabled(playing);
+		}
+
+		if (playing) {
+
+			//pause
+			robotTask.cancel();
+			robotTimer.purge();
+
+		} else {
+
+			//play
+			robotTask = new TimerTask() {
+				public void run() {
+					for (int i = 0; i < runningRobots.size(); i++) {
+						Robot robot = runningRobots.get(i);
+						if (robot.threadIsActive) {
+							robot.step();
+						} else {
+							runningRobots.remove(i);
+							i--;
+						}
+					}
+					panel.repaint();
+
+					if (runningRobots.isEmpty()) {
+						cancel();
+						pause();
 					}
 				}
-				panel.repaint();
+			};
+			robotTimer.schedule(robotTask, 0, delay);
 
-				if (runningRobots.isEmpty()) {
-					this.cancel();
-				}
-			}
-		};
-		timer.schedule(currentTask, 0, delay);
+		}
+		playing = !playing;
+	}
+
+	public void play() {
+		if (!playing) {
+			playPause();
+		}
 	}
 
 	public void pause() {
-		currentTask.cancel();
-		timer.purge();
+		if (playing) {
+			playPause();
+		}
 	}
 
 	public void step() {

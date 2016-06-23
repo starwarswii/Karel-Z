@@ -2,7 +2,6 @@ package test;
 
 import static karelz.Direction.*;
 import static karelz.Util.path;
-
 import karelz.*;
 
 public class Test {
@@ -13,8 +12,7 @@ public class Test {
 		world.add(new TestRobot(5, 6, RIGHT).withLogging());
 		world.add(new TestRobot(3, 4, UP).withLogging());
 
-		Window window = new Window(world, 100, true, true, 100);
+		Window window = new Window(world, 100, true, true, 500);
 		window.setVisible(true);
 	}
-
 }
