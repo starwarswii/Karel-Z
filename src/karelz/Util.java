@@ -46,23 +46,23 @@ public class Util {
 	public static Font sizeFontToFit(Graphics2D g, Font font, String string, int width, int height) {
 		int minSize = 0;
 		int maxSize = 288;
-		int curSize = font.getSize();
+		int currentSize = font.getSize();
 
-		while (maxSize - minSize > 2) {
-			FontMetrics fm = g.getFontMetrics(new Font(font.getName(), font.getStyle(), curSize));
-			int fontWidth = fm.stringWidth(string);
-			int fontHeight = fm.getLeading() + fm.getMaxAscent() + fm.getMaxDescent();
+		while (maxSize-minSize > 2) {
+			FontMetrics metrics = g.getFontMetrics(new Font(font.getName(), font.getStyle(), currentSize));
+			int fontWidth = metrics.stringWidth(string);
+			int fontHeight = metrics.getLeading()+metrics.getMaxAscent()+metrics.getMaxDescent();
 
 			if ((fontWidth > width) || (fontHeight > height)) {
-				maxSize = curSize;
-				curSize = (maxSize + minSize) / 2;
+				maxSize = currentSize;
+				currentSize = (maxSize+minSize)/2;
 			} else {
-				minSize = curSize;
-				curSize = (minSize + maxSize) / 2;
+				minSize = currentSize;
+				currentSize = (minSize+maxSize)/2;
 			}
 		}
 
-		return new Font(font.getName(), font.getStyle(), curSize);
+		return new Font(font.getName(), font.getStyle(), currentSize);
 	}
 
 	public static void sleep(long milliseconds) {
@@ -71,5 +71,13 @@ public class Util {
 
 	public static String path(String name) {
 		return WORLD_PATH+name;
+	}
+	
+	public static int random(int min, int max) {
+		return min+(int)(Math.random()*((max-min)+1));
+	}
+	
+	public static Direction randomDirection() {
+		return Direction.values()[(int)(Math.random()*4)];
 	}
 }

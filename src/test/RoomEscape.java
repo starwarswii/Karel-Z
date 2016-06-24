@@ -11,11 +11,11 @@ public class RoomEscape {
 		World world = new World(path("room.kzw"));
 
 		world.add(new RoomEscapeRobot(7, 10, RIGHT).withLogging());
+		world.add(new RoomEscapeRobot(17, 10, RIGHT).withLogging());
 		world.add(new RoomEscapeRobot(7, 12, UP).withLogging());
 
 		Window window = new Window(world, 100, true, true);
 		window.setVisible(true);
 
 	}
-
 }

@@ -14,5 +14,8 @@ public class Test {
 
 		Window window = new Window(world, 100, true, true, 500);
 		window.setVisible(true);
+		Util.sleep(5000);
+		window.loadWorld(new World().add(new TestRobot(3,3, UP)));
+		//window.play();
 	}
 }

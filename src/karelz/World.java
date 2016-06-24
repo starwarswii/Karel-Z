@@ -26,6 +26,10 @@ public class World {
 		this.colorCollection = colorCollection;
 	}
 
+	public World() {
+		this(20, 20);
+	}
+	
 	public World(int width, int height) {
 		this(width, height, WorldColorCollection.getDefaultWorldColorCollection());
 	}
@@ -171,32 +175,35 @@ public class World {
 		getWorldAsStringList().forEach(System.out::println);
 	}
 
-	public void add(Point point, Cell cell) {
+	public World add(Point point, Cell cell) {
 		if (map.containsKey(point)) {
 			map.get(point).add(cell);
 		} else {
 			map.put(point, cell);
 		}
+		return this;
 	}
 
-	public void add(int x, int y, Cell cell) {
-		add(new Point(x, y), cell);
+	public World add(int x, int y, Cell cell) {
+		return add(new Point(x, y), cell);
 	}
 
-	public void removeAll(Point point) {
+	public World removeAll(Point point) {
 		get(point).clear();
+		return this;
 	}
 
-	public void removeAll(int x, int y) {
-		removeAll(new Point(x, y));
+	public World removeAll(int x, int y) {
+		return removeAll(new Point(x, y));
 	}
 
-	public void remove(Point point, Cell cell) {
+	public World remove(Point point, Cell cell) {
 		get(point).remove(cell);
+		return this;
 	}
 
-	public void remove(int x, int y, Cell cell) {
-		remove(new Point(x, y), cell);
+	public World remove(int x, int y, Cell cell) {
+		return remove(new Point(x, y), cell);
 	}
 
 	public Cell get(Point point) {
@@ -207,9 +214,10 @@ public class World {
 		return get(new Point(x, y));
 	}
 
-	public void add(Robot robot) {
+	public World add(Robot robot) {
 		robots.add(robot);
 		robot.world = this;
+		return this;
 	}
 
 }

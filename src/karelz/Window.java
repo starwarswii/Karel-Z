@@ -72,13 +72,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 	World world;
 	PanAndZoomPanel panel;
 	int delay;
+	boolean showEditorTools;
 	boolean showPlaybackTools;
 	long autoplayAfter;
 
 	Timer refreshTimer;
 	TimerTask refreshTask;
 
-	boolean playing;
+	volatile boolean playing;
 	ArrayList<Robot> runningRobots;
 	Timer robotTimer;
 	TimerTask robotTask;
@@ -107,24 +108,28 @@ public class Window extends JFrame {//represents an object that displays and upd
 	ExtensionFileChooser fileChooser;
 	JMenuItem saveButton;
 
+	public Window() {
+		this(new World());
+	}
+
 	public Window(World aWorld) {
 		this(aWorld, 100);
 	}
 
-	public Window(World world, int delay) {
-		this(world, delay, false);
+	public Window(World aWorld, int delay) {
+		this(aWorld, delay, false);
 	}
 
-	public Window(World world, boolean showEditorTools) {
-		this(world, 100, showEditorTools);
+	public Window(World aWorld, boolean showEditorTools) {
+		this(aWorld, 100, showEditorTools);
 	}
 
-	public Window(World world, int delay, boolean showEditorTools) {
-		this(world, delay, showEditorTools, false);
+	public Window(World aWorld, int delay, boolean showEditorTools) {
+		this(aWorld, delay, showEditorTools, false);
 	}
 
-	public Window(World world, int delay, boolean showEditorTools, boolean showPlaybackTools) {
-		this(world, delay, showEditorTools, showPlaybackTools, -1);
+	public Window(World aWorld, int delay, boolean showEditorTools, boolean showPlaybackTools) {
+		this(aWorld, delay, showEditorTools, showPlaybackTools, -1);
 	}
 
 	public Window(World aWorld, int delay, boolean showEditorTools, boolean showPlaybackTools, long autoplayAfter) {
@@ -132,6 +137,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 		world = aWorld;
 		this.delay = Math.max(delay, 1);
+		this.showEditorTools = showEditorTools;
 		this.showPlaybackTools = showPlaybackTools;
 		this.autoplayAfter = autoplayAfter;
 		playing = false;
@@ -528,7 +534,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 				JDialog sizeDialog = new JDialog(this, "World Size", true) {
 					public void setVisible(boolean b) {
 						if (newWorld && !b) {
-							world = new World(20, 20);
+							world = new World();
 							panel.resetPanAndZoom();
 							updateWorldColors(world.colorCollection);
 							updateDirty(false);
@@ -802,39 +808,50 @@ public class Window extends JFrame {//represents an object that displays and upd
 		return true;
 	}
 
-	public void updateTitle() {//\u2013 is EN_DASH
-		setTitle("Karel-Z"+(saveFile != null ? " \u2013 "+saveFile.getName() : "")+(dirty ? "*" : ""));
-	}
-
 	public void updateDirty(boolean value) {
 		dirty = value;
-		saveButton.setEnabled(value);
-		updateTitle();
+		setTitle("Karel-Z"+(saveFile != null ? " \u2013 "+saveFile.getName() : "")+(dirty ? "*" : ""));
+		if (showEditorTools) {
+			saveButton.setEnabled(value);	
+		}
 	}
 
 	public void updateWorldColors(WorldColorCollection colorCollection) {
 		//update world color collection
 		world.colorCollection = colorCollection;
 
-		//update color panels
-		wallPanel.setBackground(colorCollection.wallColor);
-		beeperPanel.setBackground(colorCollection.beeperColor);
-		beeperLabelPanel.setBackground(colorCollection.beeperLabelColor);
-		linePanel.setBackground(colorCollection.lineColor);
-		backgroundPanel.setBackground(colorCollection.backgroundColor);
-
-		//update panel background
+		//update PanAndZoom panel background
 		panel.setBackground(colorCollection.backgroundColor);
 
-		//update tool icons
-		for (Component a : toolBar.getComponents()) {
-			if (a instanceof ToolButton) {
-				((ToolButton)a).generateAndSetIcon(world.colorCollection, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
+		if (showEditorTools) {
+
+			//update color panels
+			wallPanel.setBackground(colorCollection.wallColor);
+			beeperPanel.setBackground(colorCollection.beeperColor);
+			beeperLabelPanel.setBackground(colorCollection.beeperLabelColor);
+			linePanel.setBackground(colorCollection.lineColor);
+			backgroundPanel.setBackground(colorCollection.backgroundColor);
+
+			//update tool icons
+			for (Component a : toolBar.getComponents()) {
+				if (a instanceof ToolButton) {
+					((ToolButton)a).generateAndSetIcon(world.colorCollection, infiniteCheckBox.isSelected() ? Cell.INFINITY : (int)beeperSpinner.getValue());
+				}
 			}
 		}
 
 		//repaint
 		panel.repaint();
+	}
+
+	public void loadWorld(World aWorld) {
+		saveFile = null;
+		pause();
+		world.loadWorld(aWorld);
+		launchThreads();
+		panel.resetPanAndZoom();
+		updateWorldColors(world.colorCollection);
+		updateDirty(false);
 	}
 
 	public void launchThreads() {
@@ -905,5 +922,37 @@ public class Window extends JFrame {//represents an object that displays and upd
 			}
 		}
 		panel.repaint();
+	}
+
+	public void runTest(World test) {//this returns when the test is finished
+		loadWorld(test);
+		play();
+		while (playing) {//pause is programmatically pressed in the robotTask when the robots finish running
+			Util.sleep(delay);
+		}
+		//return, as the test is finished
+	}
+
+	public static void runTests(World... tests) {
+		runTests(100, tests);
+	}
+
+	public static void runTests(int delay, World... tests) {
+		runTests(delay, 500, tests);
+	}
+
+	public static void runTests(int delay, int delayBetweenTests, World... tests) {
+		runTests(delay, delayBetweenTests, false, false, tests);
+	}
+
+	public static void runTests(int delay, int delayBetweenTests, boolean showEditorTools, boolean showPlaybackTools, World... tests) {
+		Window window = new Window(tests[0], delay, showEditorTools, showPlaybackTools);
+		window.setVisible(true);
+		Util.sleep(250);
+
+		for (int i = 0; i < tests.length; i++) {
+			window.runTest(tests[i]);
+			Util.sleep(delayBetweenTests);
+		}
 	}
 }

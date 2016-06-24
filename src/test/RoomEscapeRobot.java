@@ -25,7 +25,6 @@ public class RoomEscapeRobot extends SuperRobot {
 
 	public void task() throws EndTaskException {
 		while (frontIsClear()) {//find a wall or the exit
-			move();
 			turnLeft();
 			if (frontIsBlocked()) {
 				turnRight();
@@ -38,6 +37,7 @@ public class RoomEscapeRobot extends SuperRobot {
 			} else {
 				turnRight();
 			}
+			move();
 		}
 		turnLeft();
 		while (true) {
