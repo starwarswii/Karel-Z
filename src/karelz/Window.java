@@ -660,7 +660,6 @@ public class Window extends JFrame {//represents an object that displays and upd
 				newButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
 				fileMenu.add(newButton);
 
-				//TODO if the filetype is .kwld, convert to karelz format
 				fileChooser = new ExtensionFileChooser(DIRECTORY, "kzw");
 				fileChooser.setFileFilter(new FileNameExtensionFilter("Karel Worlds", "txt", "kzw", "kwld"));
 
@@ -772,18 +771,15 @@ public class Window extends JFrame {//represents an object that displays and upd
 				}
 			};
 			refreshTimer.schedule(refreshTask, 0, 100);
+
+			if (autoplayAfter >= 0) {
+				Util.sleep(autoplayAfter);
+				play();
+			}
 		} else if (refreshTask != null) {
 			refreshTask.cancel();
 			refreshTimer.purge();
 		}
-
-		if (autoplayAfter >= 0 && b) {
-
-			Util.sleep(autoplayAfter);
-
-			play();
-		}
-		//panel.repaint();
 	}
 
 	public boolean saveWorld(boolean saveAs, boolean confirm) {//returns false if should stop any future actions, like loading or exiting

@@ -29,7 +29,7 @@ public class World {
 	public World() {
 		this(20, 20);
 	}
-	
+
 	public World(int width, int height) {
 		this(width, height, WorldColorCollection.getDefaultWorldColorCollection());
 	}
@@ -86,16 +86,14 @@ public class World {
 		}
 	}
 
-	public void loadKarelJRobotWorld(String path) {
-		//TODO complete translation of old world form to new
-	}
-
 	public void loadWorldString(String worldString) {
 		loadWorldAsStringList(Arrays.asList(worldString.split("\n")));
 	}
 
-	public void loadWorldAsStringList(List<String> lines) {//TODO this forEach thing might not work for multiline Robot serialized bytecode
-		//TODO try catch, if any parse-ints fail, reset the world and popup a msgbox that say "invalid world file" or somthin
+	public void loadWorldAsStringList(List<String> lines) {
+		//TODO try catch, if any parse-ints fail, reset the world and popup a msgbox that say "invalid world file, some parts may not have loaded"
+		//set a flag and if set after loading, have the Window realize that and pop up a msgbox
+
 		//completely reset this world. like calling the constructor again
 		map = new HashMap<Point,Cell>();
 		robots = new ArrayList<Robot>();
@@ -103,41 +101,74 @@ public class World {
 		height = 0;
 		colorCollection = WorldColorCollection.getDefaultWorldColorCollection();
 
-		lines.forEach(line -> {
-			String[] tokens = line.split(" ");
-			switch (tokens[0]) {
-			case "world-size":
-				width = Integer.parseInt(tokens[1]);
-				height = Integer.parseInt(tokens[2]);
-				break;
-			case "wall-color":
-				colorCollection.wallColor = new Color(Integer.parseInt(tokens[1]));
-				break;
-			case "beeper-color":
-				colorCollection.beeperColor = new Color(Integer.parseInt(tokens[1]));
-				break;
-			case "beeper-label-color":
-				colorCollection.beeperLabelColor = new Color(Integer.parseInt(tokens[1]));
-				break;
-			case "line-color":
-				colorCollection.lineColor = new Color(Integer.parseInt(tokens[1]));
-				break;
-			case "background-color":
-				colorCollection.backgroundColor = new Color(Integer.parseInt(tokens[1]));
-				break;
-			case "beeper-pile":
-				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBeeperPile(Integer.parseInt(tokens[3])));
-				break;
-			case "horizontal-wall":
-				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newHorizontalWall());
-				break;
-			case "vertical-wall":
-				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newVerticalWall());
-				break;
-			case "block-wall":
-				add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBlockWall());
-			}//TODO add bot support?
-		});
+		if (lines.get(0).toLowerCase().startsWith("karelworld")) {//load the old Karel J Robot format. this is only supported in loading, and saving the file will overwrite it in the new format
+			lines.forEach(line -> {
+				//note all positions in the old format are 1-indexed and are listed y,x (called streets, avenues). walls are also on the right and top of cells, instead of the left and bottom
+				String[] tokens = line.split(" ");
+				switch (tokens[0].toLowerCase()) {
+				case "streets":
+					height = Integer.parseInt(tokens[1]);
+					break;
+				case "avenues":
+					width = Integer.parseInt(tokens[1]);
+					break;
+				case "beepers":
+					add(Integer.parseInt(tokens[2])-1, Integer.parseInt(tokens[1])-1, Cell.newBeeperPile(Integer.parseInt(tokens[3])));
+					break;
+				case "eastwestwalls":
+					int northOfStreet = Integer.parseInt(tokens[1]);
+					int fromAvenue = Integer.parseInt(tokens[2]);
+					int toAvenue = Integer.parseInt(tokens[3]);
+					for (int i = 0; i < (toAvenue-fromAvenue)+1; i++) {
+						add(fromAvenue-1+i, northOfStreet, Cell.newHorizontalWall());
+					}
+					break;
+				case "northsouthwalls":
+					int eastOfAvenue = Integer.parseInt(tokens[1]);
+					int fromStreet = Integer.parseInt(tokens[2]);
+					int toStreet = Integer.parseInt(tokens[3]);
+					for (int i = 0; i < (toStreet-fromStreet)+1; i++) {
+						add(eastOfAvenue, fromStreet-1+i, Cell.newVerticalWall());
+					}
+				}
+			});
+		} else {//load normal world format
+			lines.forEach(line -> {//TODO this forEach thing might not work for multiline Robot serialized bytecode
+				String[] tokens = line.split(" ");
+				switch (tokens[0].toLowerCase()) {
+				case "world-size":
+					width = Integer.parseInt(tokens[1]);
+					height = Integer.parseInt(tokens[2]);
+					break;
+				case "wall-color":
+					colorCollection.wallColor = new Color(Integer.parseInt(tokens[1]));
+					break;
+				case "beeper-color":
+					colorCollection.beeperColor = new Color(Integer.parseInt(tokens[1]));
+					break;
+				case "beeper-label-color":
+					colorCollection.beeperLabelColor = new Color(Integer.parseInt(tokens[1]));
+					break;
+				case "line-color":
+					colorCollection.lineColor = new Color(Integer.parseInt(tokens[1]));
+					break;
+				case "background-color":
+					colorCollection.backgroundColor = new Color(Integer.parseInt(tokens[1]));
+					break;
+				case "beeper-pile":
+					add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBeeperPile(Integer.parseInt(tokens[3])));
+					break;
+				case "horizontal-wall":
+					add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newHorizontalWall());
+					break;
+				case "vertical-wall":
+					add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newVerticalWall());
+					break;
+				case "block-wall":
+					add(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]), Cell.newBlockWall());
+				}//TODO add bot support?
+			});
+		}
 	}
 
 	public List<String> getWorldAsStringList() {
