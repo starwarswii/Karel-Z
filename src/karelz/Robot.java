@@ -241,7 +241,7 @@ public abstract class Robot {
 		if (state == RobotState.ON) {
 			if (hasBeepers() && beepers != Cell.INFINITY) {
 				beepers--;
-				world.add(x, y, Cell.newBeeperPile(1));
+				world.add(x, y, Cell.newBeeperPile());
 			} else {
 				crash("Tried to put beeper when it didn't have one");
 			}

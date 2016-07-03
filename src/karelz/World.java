@@ -7,19 +7,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class World {
 
-	HashMap<Point,Cell> map;
+	ConcurrentHashMap<Point,Cell> map;
 	ArrayList<Robot> robots;
 	int width;
 	int height;
 	WorldColorCollection colorCollection;
 
 	public World(int width, int height, WorldColorCollection colorCollection) {
-		map = new HashMap<Point,Cell>();
+		map = new ConcurrentHashMap<Point,Cell>();
 		robots = new ArrayList<Robot>();
 		this.width = width;
 		this.height = height;
@@ -95,7 +95,7 @@ public class World {
 		//set a flag and if set after loading, have the Window realize that and pop up a msgbox
 
 		//completely reset this world. like calling the constructor again
-		map = new HashMap<Point,Cell>();
+		map = new ConcurrentHashMap<Point,Cell>();
 		robots = new ArrayList<Robot>();
 		width = 0;
 		height = 0;

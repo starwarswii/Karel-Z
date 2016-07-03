@@ -127,5 +127,4 @@ public class RoomEscapeRobot extends Robot {
 			window.runTest(500, new World(path("room.kzw")).add(new RoomEscapeRobot(Util.random(3, 15), Util.random(2, 14), Util.randomDirection())));
 		}
 	}
-
 }

@@ -159,6 +159,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 					return;
 				}
 
+				pause();
 				System.gc();
 				dispose();//TODO maybe make all other pop up windows instance variables and dispose of them here too?
 

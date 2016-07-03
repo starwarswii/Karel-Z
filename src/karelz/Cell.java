@@ -45,6 +45,10 @@ public class Cell {
 		return "Flags: "+flags+", Beepers: "+beepers;
 	}
 
+	public static Cell newBeeperPile() {
+		return newBeeperPile(1);
+	}
+	
 	public static Cell newBeeperPile(int count) {
 		return new Cell(BEEPER_PILE_MASK, count);
 	}

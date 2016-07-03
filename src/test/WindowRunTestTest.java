@@ -8,9 +8,9 @@ public class WindowRunTestTest {
 
 	public static void main(String[] args) {
 		Window.runTests(100, 500, true, true,
-				new World().add(new TestRobot(3,3, UP)),
-				new World(path("test.kzw")).add(new TestRobot(5,5, UP))
-				);
+			new World().add(new TestRobot(3,3, UP)),
+			new World(path("test.kzw")).add(new TestRobot(5,5, UP))
+			);
 
 		Util.sleep(1000);
 
