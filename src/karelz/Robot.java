@@ -12,6 +12,7 @@ public abstract class Robot {
 	RobotState state;
 	World world;
 	boolean logging;
+	long stepCount;
 
 	Thread thread;
 	volatile boolean threadIsActive;
@@ -41,6 +42,7 @@ public abstract class Robot {
 		state = RobotState.ON;
 		this.world = world;
 		logging = false;
+		stepCount = 0;
 	}
 
 	//this contains the robot's program
@@ -56,13 +58,14 @@ public abstract class Robot {
 			} catch (EndTaskException e) {}
 			threadIsActive = false;
 			if (state != RobotState.ERROR) {
-				log("finished its task");	
+				log("finished its task in "+stepCount+(stepCount == 1 ? " step" : " steps"));	
 			}
 		});
 		thread.start();
 	}
 
 	void step() {
+		stepCount++;
 		log("stepped, facing "+direction.toString().toLowerCase()+" with "+(beepers == Cell.INFINITY ? "infinity" : beepers)+(beepers == 1 ? " beeper" : " beepers"));
 		thread.interrupt();
 	}
@@ -106,6 +109,10 @@ public abstract class Robot {
 
 	public boolean getLogging() {
 		return logging;
+	}
+
+	public long getStepCount() {
+		return stepCount;
 	}
 
 	public boolean frontIsClear() {
@@ -172,7 +179,7 @@ public abstract class Robot {
 	public boolean facingLeft() {
 		return direction == Direction.LEFT;
 	}
-	
+
 	public boolean running() {//used for "while (running())" instead of "while (true)"
 		return state == RobotState.ON;
 	}

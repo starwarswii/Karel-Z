@@ -72,6 +72,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 	World world;
 	PanAndZoomPanel panel;
 	int delay;
+	int stepOverdrive;
 	boolean showEditorTools;
 	boolean showPlaybackTools;
 	long autoplayAfter;
@@ -141,6 +142,7 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 		world = aWorld;
 		this.delay = Math.max(delay, 1);
+		this.stepOverdrive = 1;
 		this.showEditorTools = showEditorTools;
 		this.showPlaybackTools = showPlaybackTools;
 		this.autoplayAfter = autoplayAfter;
@@ -779,8 +781,18 @@ public class Window extends JFrame {//represents an object that displays and upd
 		return delay;
 	}
 
-	public void setDelay(int delay) {
+	public Window setDelay(int delay) {//returns this object for easy chaining e.g. new Window().setDelay(1)
 		this.delay = Math.max(delay, 1);
+		return this;
+	}
+
+	public int getStepOverdrive() {
+		return stepOverdrive;
+	}
+
+	public Window setStepOverdrive(int stepOverdrive) {//returns this object for easy chaining e.g. new Window().setStepOverdrive(100)
+		this.stepOverdrive = stepOverdrive;
+		return this;
 	}
 
 	public boolean saveWorld(boolean saveAs, boolean confirm) {//returns false if should stop any future actions, like loading or exiting
@@ -880,7 +892,9 @@ public class Window extends JFrame {//represents an object that displays and upd
 					for (int i = 0; i < runningRobots.size(); i++) {
 						Robot robot = runningRobots.get(i);
 						if (robot.threadIsActive) {
-							robot.step();
+							for (int j = 0; j < stepOverdrive; j++) {
+								robot.step();
+							}
 						} else {
 							runningRobots.remove(i);
 							i--;

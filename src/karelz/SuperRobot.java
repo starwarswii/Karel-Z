@@ -31,6 +31,13 @@ public abstract class SuperRobot extends Robot {
 		}
 	}
 
+	public void turnAround() {
+		if (state == RobotState.ON) {
+			direction = direction.getOppositeDirection();
+			waitForStep();
+		}
+	}
+
 	public void teleportTo(int x, int y) throws EndTaskException {
 		if (state == RobotState.ON) {
 			if (x < 0 || y < 0) {
@@ -43,5 +50,16 @@ public abstract class SuperRobot extends Robot {
 			this.y = y;
 			waitForStep();
 		}
+	}
+
+	public void forceCrash(Object message) throws EndTaskException {
+		state = RobotState.ERROR;
+		threadIsActive = false;
+		log("force crashed: "+message);
+		throw new EndTaskException();
+	}
+
+	public World getWorld() {
+		return world;
 	}
 }

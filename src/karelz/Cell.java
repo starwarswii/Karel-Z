@@ -48,7 +48,7 @@ public class Cell {
 	public static Cell newBeeperPile() {
 		return newBeeperPile(1);
 	}
-	
+
 	public static Cell newBeeperPile(int count) {
 		return new Cell(BEEPER_PILE_MASK, count);
 	}
@@ -92,6 +92,10 @@ public class Cell {
 
 	public boolean containsWall() {
 		return containsHorizontalWall() || containsVerticalWall() || containsBlockWall();
+	}
+
+	public int getBeeperCount() {
+		return containsValidBeeperPile() ? beepers : 0;
 	}
 
 	public void clearBeeperPileIfEmpty() {

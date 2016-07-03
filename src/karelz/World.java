@@ -46,6 +46,14 @@ public class World {
 		loadWorld(path);
 	}
 
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
 	public void saveWorld(String path) {
 		try {
 			Files.write(Paths.get(path), getWorldAsStringList());
