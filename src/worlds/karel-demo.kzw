@@ -1,0 +1,15 @@
+world-size 20 20
+wall-color -16777216
+beeper-color -16777216
+beeper-label-color -1
+line-color -16777216
+background-color -1
+horizontal-wall 3 3
+vertical-wall 4 1
+vertical-wall 4 2
+vertical-wall 1 4
+beeper-pile 3 2 1
+beeper-pile 1 3 1
+horizontal-wall 1 3
+vertical-wall 1 3
+horizontal-wall 2 3

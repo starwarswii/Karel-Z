@@ -63,6 +63,7 @@ public abstract class Robot {
 	}
 
 	void step() {
+		log("stepped, facing "+direction.toString().toLowerCase()+" with "+(beepers == Cell.INFINITY ? "infinity" : beepers)+(beepers == 1 ? " beeper" : " beepers"));
 		thread.interrupt();
 	}
 
