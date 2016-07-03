@@ -31,4 +31,17 @@ public abstract class SuperRobot extends Robot {
 		}
 	}
 
+	public void teleportTo(int x, int y) throws EndTaskException {
+		if (state == RobotState.ON) {
+			if (x < 0 || y < 0) {
+				crash("Tried to teleport out of bounds");
+			}
+			if (world.get(x, y).containsBlockWall()) {
+				crash("Tried to teleport into a wall at ("+x+", "+y+")");
+			}
+			this.x = x;
+			this.y = y;
+			waitForStep();
+		}
+	}
 }

@@ -171,6 +171,10 @@ public abstract class Robot {
 	public boolean facingLeft() {
 		return direction == Direction.LEFT;
 	}
+	
+	public boolean running() {//used for "while (running())" instead of "while (true)"
+		return state == RobotState.ON;
+	}
 
 	public boolean frontIsBlocked() {return !frontIsClear();}
 	public boolean doesntHaveBeepers() {return !hasBeepers();}
@@ -180,6 +184,7 @@ public abstract class Robot {
 	public boolean notFacingRight() {return !facingRight();}
 	public boolean notFacingDown() {return !facingDown();}
 	public boolean notFacingLeft() {return !facingLeft();}
+	public boolean notRunning() {return !running();}
 
 	public void iterate(int times, CodeBlock code) throws EndTaskException {
 		for (int i = 0; i < times && threadIsActive; i++) {

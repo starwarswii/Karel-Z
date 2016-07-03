@@ -124,6 +124,10 @@ public class Window extends JFrame {//represents an object that displays and upd
 		this(aWorld, 100, showEditorTools);
 	}
 
+	public Window(World aWorld, int delay, long autoplayAfter) {
+		this(aWorld, delay, false, false, autoplayAfter);
+	}
+
 	public Window(World aWorld, int delay, boolean showEditorTools) {
 		this(aWorld, delay, showEditorTools, false);
 	}
@@ -451,83 +455,83 @@ public class Window extends JFrame {//represents an object that displays and upd
 				//generated code, don't touch
 				GroupLayout colorLayout = new GroupLayout(colorDialog.getContentPane());
 				colorLayout.setHorizontalGroup(
-						colorLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(colorLayout.createSequentialGroup()
-								.addContainerGap()
+					colorLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(colorLayout.createSequentialGroup()
+						.addContainerGap()
+						.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+							.addGroup(colorLayout.createSequentialGroup()
 								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(colorLayout.createSequentialGroup()
-												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-														.addComponent(wallLabel)
-														.addComponent(beeperLabel)
-														.addComponent(beeperLabelLabel)
-														.addComponent(lineLabel)
-														.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 84, GroupLayout.PREFERRED_SIZE))
-												.addGap(67)
-												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-														.addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-														.addComponent(linePanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-														.addComponent(beeperLabelPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-														.addComponent(beeperPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-														.addComponent(wallPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)))
-										.addGroup(colorLayout.createSequentialGroup()
-												.addComponent(colorOkButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(colorCancelButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 127, GroupLayout.PREFERRED_SIZE)))
+									.addComponent(wallLabel)
+									.addComponent(beeperLabel)
+									.addComponent(beeperLabelLabel)
+									.addComponent(lineLabel)
+									.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 84, GroupLayout.PREFERRED_SIZE))
+								.addGap(67)
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+									.addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+									.addComponent(linePanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+									.addComponent(beeperLabelPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+									.addComponent(beeperPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+									.addComponent(wallPanel, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)))
+							.addGroup(colorLayout.createSequentialGroup()
+								.addComponent(colorOkButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
 								.addPreferredGap(ComponentPlacement.RELATED)
-								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
-										.addComponent(beeperButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-										.addComponent(beeperLabelButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-										.addComponent(lineButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-										.addComponent(backgroundButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-										.addComponent(wallButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-								.addGap(12))
-						);
+								.addComponent(colorCancelButton, GroupLayout.PREFERRED_SIZE, 75, GroupLayout.PREFERRED_SIZE)
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 127, GroupLayout.PREFERRED_SIZE)))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
+							.addComponent(beeperButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+							.addComponent(beeperLabelButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+							.addComponent(lineButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+							.addComponent(backgroundButton, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+							.addComponent(wallButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+						.addGap(12))
+					);
 				colorLayout.setVerticalGroup(
-						colorLayout.createParallelGroup(Alignment.TRAILING)
-						.addGroup(colorLayout.createSequentialGroup()
-								.addContainerGap()
-								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-										.addComponent(wallPanel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
-										.addComponent(wallLabel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
-										.addComponent(wallButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+					colorLayout.createParallelGroup(Alignment.TRAILING)
+					.addGroup(colorLayout.createSequentialGroup()
+						.addContainerGap()
+						.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+							.addComponent(wallPanel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
+							.addComponent(wallLabel, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE)
+							.addComponent(wallButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
+							.addComponent(beeperPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+							.addComponent(beeperLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+							.addComponent(beeperButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+							.addGroup(colorLayout.createSequentialGroup()
+								.addComponent(beeperLabelLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
 								.addPreferredGap(ComponentPlacement.RELATED)
-								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING, false)
-										.addComponent(beeperPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-										.addComponent(beeperLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-										.addComponent(beeperButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+								.addComponent(lineLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+							.addGroup(colorLayout.createSequentialGroup()
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+									.addComponent(beeperLabelPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+									.addComponent(beeperLabelButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
 								.addPreferredGap(ComponentPlacement.RELATED)
 								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(colorLayout.createSequentialGroup()
-												.addComponent(beeperLabelLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(lineLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(backgroundLabel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-										.addGroup(colorLayout.createSequentialGroup()
-												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-														.addComponent(beeperLabelPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-														.addComponent(beeperLabelButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-														.addComponent(linePanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-														.addComponent(lineButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
-														.addComponent(backgroundButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-														.addComponent(backgroundPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))))
-								.addGap(18)
-								.addGroup(colorLayout.createParallelGroup(Alignment.BASELINE, false)
-										.addComponent(colorCancelButton)
-										.addComponent(colorOkButton)
-										.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
-								.addContainerGap())
-						);
+									.addComponent(linePanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+									.addComponent(lineButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addGroup(colorLayout.createParallelGroup(Alignment.LEADING)
+									.addComponent(backgroundButton, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+									.addComponent(backgroundPanel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE))))
+						.addGap(18)
+						.addGroup(colorLayout.createParallelGroup(Alignment.BASELINE, false)
+							.addComponent(colorCancelButton)
+							.addComponent(colorOkButton)
+							.addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
+						.addContainerGap())
+					);
 				colorDialog.getContentPane().setLayout(colorLayout);
 
 				//Size Window
-				//defined first so sizeFrame anonymous class can access them
+				//defined first so sizeDialog anonymous class can access them
 				ScrollSpinner widthSpinner = new ScrollSpinner(new SpinnerNumberModel(world.width, 1, null, 1));
 				ScrollSpinner heightSpinner = new ScrollSpinner(new SpinnerNumberModel(world.height, 1, null, 1));
 
@@ -551,18 +555,6 @@ public class Window extends JFrame {//represents an object that displays and upd
 
 				JLabel widthLabel = new JLabel("Width");
 				JLabel heightLabel = new JLabel("Height");
-
-				widthSpinner.addMouseWheelListener(e -> {
-					if ((int)widthSpinner.getValue()-e.getWheelRotation() > 0) {
-						widthSpinner.setValue((int)widthSpinner.getValue()-e.getWheelRotation());
-					}
-				});
-
-				heightSpinner.addMouseWheelListener(e -> {
-					if ((int)heightSpinner.getValue()-e.getWheelRotation() > 0) {
-						heightSpinner.setValue((int)heightSpinner.getValue()-e.getWheelRotation());
-					}
-				});
 
 				JButton sizeOkButton = new JButton("OK");
 				sizeOkButton.addActionListener(e -> {
@@ -589,46 +581,46 @@ public class Window extends JFrame {//represents an object that displays and upd
 				//generated code, don't touch
 				GroupLayout sizeLayout = new GroupLayout(sizeDialog.getContentPane());
 				sizeLayout.setHorizontalGroup(
-						sizeLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(sizeLayout.createSequentialGroup()
-								.addContainerGap()
+					sizeLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(sizeLayout.createSequentialGroup()
+						.addContainerGap()
+						.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
+							.addGroup(sizeLayout.createSequentialGroup()
+								.addComponent(widthLabel)
+								.addContainerGap(198, Short.MAX_VALUE))
+							.addGroup(sizeLayout.createSequentialGroup()
+								.addComponent(heightLabel)
+								.addContainerGap(195, Short.MAX_VALUE))
+							.addGroup(sizeLayout.createSequentialGroup()
 								.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
-										.addGroup(sizeLayout.createSequentialGroup()
-												.addComponent(widthLabel)
-												.addContainerGap(198, Short.MAX_VALUE))
-										.addGroup(sizeLayout.createSequentialGroup()
-												.addComponent(heightLabel)
-												.addContainerGap(195, Short.MAX_VALUE))
-										.addGroup(sizeLayout.createSequentialGroup()
-												.addGroup(sizeLayout.createParallelGroup(Alignment.TRAILING)
-														.addGroup(sizeLayout.createSequentialGroup()
-																.addGap(77)
-																.addGroup(sizeLayout.createParallelGroup(Alignment.LEADING)
-																		.addComponent(heightSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-																		.addComponent(widthSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)))
-														.addGroup(Alignment.LEADING, sizeLayout.createSequentialGroup()
-																.addComponent(sizeOkButton)
-																.addPreferredGap(ComponentPlacement.RELATED)
-																.addComponent(sizeCancelButton)))
-												.addContainerGap(19, GroupLayout.PREFERRED_SIZE))))
-						);
-				sizeLayout.setVerticalGroup(
-						sizeLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(sizeLayout.createSequentialGroup()
-								.addContainerGap()
-								.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
-										.addComponent(widthLabel)
-										.addComponent(widthSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-								.addPreferredGap(ComponentPlacement.RELATED)
-								.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
-										.addComponent(heightLabel)
-										.addComponent(heightSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-								.addGap(18)
-								.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+									.addGroup(sizeLayout.createSequentialGroup()
+										.addGap(77)
+										.addGroup(sizeLayout.createParallelGroup(Alignment.LEADING)
+											.addComponent(heightSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
+											.addComponent(widthSpinner, GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)))
+									.addGroup(Alignment.LEADING, sizeLayout.createSequentialGroup()
 										.addComponent(sizeOkButton)
-										.addComponent(sizeCancelButton))
-								.addContainerGap(13, Short.MAX_VALUE))
-						);
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(sizeCancelButton)))
+								.addContainerGap(19, GroupLayout.PREFERRED_SIZE))))
+					);
+				sizeLayout.setVerticalGroup(
+					sizeLayout.createParallelGroup(Alignment.LEADING)
+					.addGroup(sizeLayout.createSequentialGroup()
+						.addContainerGap()
+						.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+							.addComponent(widthLabel)
+							.addComponent(widthSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+							.addComponent(heightLabel)
+							.addComponent(heightSpinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addGap(18)
+						.addGroup(sizeLayout.createParallelGroup(Alignment.BASELINE)
+							.addComponent(sizeOkButton)
+							.addComponent(sizeCancelButton))
+						.addContainerGap(13, Short.MAX_VALUE))
+					);
 				sizeDialog.getContentPane().setLayout(sizeLayout);
 
 				//Top Menu Bar
@@ -782,6 +774,14 @@ public class Window extends JFrame {//represents an object that displays and upd
 		}
 	}
 
+	public int getDelay() {
+		return delay;
+	}
+
+	public void setDelay(int delay) {
+		this.delay = Math.max(delay, 1);
+	}
+
 	public boolean saveWorld(boolean saveAs, boolean confirm) {//returns false if should stop any future actions, like loading or exiting
 		if (dirty || saveAs) {
 			if (confirm) {
@@ -920,6 +920,11 @@ public class Window extends JFrame {//represents an object that displays and upd
 		panel.repaint();
 	}
 
+	public void runTest(int delayBetweenTests, World test) {//will sleep delayBetweenTests milliseconds after finishing the test
+		runTest(test);
+		Util.sleep(delayBetweenTests);
+	}
+
 	public void runTest(World test) {//this returns when the test is finished
 		loadWorld(test);
 		play();
@@ -929,19 +934,20 @@ public class Window extends JFrame {//represents an object that displays and upd
 		//return, as the test is finished
 	}
 
-	public static void runTests(World... tests) {
-		runTests(100, tests);
+	public static Window runTests(World... tests) {
+		return runTests(100, tests);
 	}
 
-	public static void runTests(int delay, World... tests) {
-		runTests(delay, 500, tests);
+	public static Window runTests(int delay, World... tests) {
+		return runTests(delay, 500, tests);
 	}
 
-	public static void runTests(int delay, int delayBetweenTests, World... tests) {
-		runTests(delay, delayBetweenTests, false, false, tests);
+	public static Window runTests(int delay, int delayBetweenTests, World... tests) {
+		return runTests(delay, delayBetweenTests, false, false, tests);
 	}
 
-	public static void runTests(int delay, int delayBetweenTests, boolean showEditorTools, boolean showPlaybackTools, World... tests) {
+	//returns the Window object it creates so you can then run any additional generated tests with runTest() afterwards
+	public static Window runTests(int delay, int delayBetweenTests, boolean showEditorTools, boolean showPlaybackTools, World... tests) {
 		Window window = new Window(tests[0], delay, showEditorTools, showPlaybackTools);
 		window.setVisible(true);
 		Util.sleep(250);
@@ -950,5 +956,6 @@ public class Window extends JFrame {//represents an object that displays and upd
 			window.runTest(tests[i]);
 			Util.sleep(delayBetweenTests);
 		}
+		return window;
 	}
 }
