@@ -1,0 +1,26 @@
+world-size 20 20
+wall-color -16777216
+beeper-color -8355712
+beeper-label-color -1
+line-color -12566464
+background-color -1
+beeper-pile 8 0 14
+beeper-pile 2 0 19
+beeper-pile 0 0 16
+beeper-pile 9 0 15
+beeper-pile 10 0 8
+beeper-pile 11 0 11
+beeper-pile 12 0 17
+beeper-pile 3 0 2
+beeper-pile 13 0 1
+beeper-pile 14 0 12
+beeper-pile 15 0 5
+beeper-pile 16 0 4
+beeper-pile 4 0 6
+beeper-pile 1 0 9
+beeper-pile 17 0 7
+beeper-pile 18 0 3
+beeper-pile 19 0 10
+beeper-pile 5 0 13
+beeper-pile 6 0 20
+beeper-pile 7 0 18

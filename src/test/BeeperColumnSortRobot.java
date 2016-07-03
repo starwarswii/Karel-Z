@@ -9,7 +9,7 @@ public class BeeperColumnSortRobot extends Robot {
 
 	boolean done;
 	int rowCount;
-	
+
 	public BeeperColumnSortRobot(int x, int y, Direction direction) {
 		super(x, y, direction);
 	}
@@ -79,7 +79,7 @@ public class BeeperColumnSortRobot extends Robot {
 		}
 		goToWall();// go to the wall, and start again
 	}
-	
+
 	public void task() throws EndTaskException {
 		done = false;
 		rowCount = 0;
@@ -93,14 +93,14 @@ public class BeeperColumnSortRobot extends Robot {
 
 	public static void main(String[] args) {
 		Window window = Window.runTests(10, new World(path("beeper-column-sort.kzw")).add(new BeeperColumnSortRobot(0, 0, RIGHT)));
-		
+
 		window.setDelay(5);
-		
+
 		while (true) {
 			window.runTest(500, generateWorld());
 		}
 	}
-	
+
 	public static World generateWorld() {
 		World world = new World(20, 20, Color.BLACK, Color.GRAY, Color.WHITE, Color.DARK_GRAY, Color.WHITE);
 
