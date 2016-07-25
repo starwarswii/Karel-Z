@@ -7,33 +7,33 @@ import karelz.*;
 
 
 public class RoomEscapeRobot extends Robot {
-
+	
 	boolean frontBlocked;
 	boolean rightBlocked;
 	boolean done;
-
+	
 	public RoomEscapeRobot(int x, int y, Direction direction) {
 		super(x, y, direction);
 	}
-
+	
 	public RoomEscapeRobot(int x, int y, Direction direction, int beepers) {
 		super(x, y, direction, beepers);
 	}
-
+	
 	public RoomEscapeRobot(int x, int y, Direction direction, Color color) {
 		super(x, y, direction, color);
 	}
-
+	
 	public RoomEscapeRobot(int x, int y, Direction direction, int beepers, Color color) {
 		super(x, y, direction, beepers, color);
 	}
-
+	
 	public void turnRight() throws EndTaskException {// Turns right
 		iterate(3, () -> {
 			turnLeft();
 		}); // Turns left three times
 	}
-
+	
 	public void faceFirstWall() throws EndTaskException {// Check for initial surrounding walls
 		iterate(4, () -> {// Turn left until facing a wall or done a full circle
 			if (frontIsClear()) {// If there isn't a wall, turn left
@@ -43,14 +43,14 @@ public class RoomEscapeRobot extends Robot {
 			} // If there is, stop turning left and exit the method
 		});
 	}
-
+	
 	public void checkSides() throws EndTaskException {
 		frontBlocked = frontIsBlocked();
 		turnRight();
 		rightBlocked = frontIsBlocked();
 		turnLeft();
 	}
-
+	
 	public void followWall() throws EndTaskException {// Follows along a wall until it finds a door, and then exits it.
 		checkSides();
 		if (!rightBlocked) {// If the wall you are following suddenly disappears, then there is a door there
@@ -65,7 +65,7 @@ public class RoomEscapeRobot extends Robot {
 			turnLeft();// If there is a wall in front, turn left
 		}
 	}
-
+	
 	public void checkOutsideRoom() throws EndTaskException {// Checks to see if it has passed through a hole in a wall, indicating a door
 		// Going into position to check if outside
 		turnLeft();
@@ -87,7 +87,7 @@ public class RoomEscapeRobot extends Robot {
 		frontBlocked = false;
 		rightBlocked = false;
 	}
-
+	
 	public void findAndFollowWall() throws EndTaskException {// Finds a wall, or the door, and then follows/exits it
 		checkSides();
 		if (!frontBlocked) {// Keep checking if the robot is outside each step until it hits a wall
@@ -100,7 +100,7 @@ public class RoomEscapeRobot extends Robot {
 			}
 		}
 	}
-
+	
 	public void task() throws EndTaskException {
 		frontBlocked = false;
 		rightBlocked = false;
@@ -109,7 +109,7 @@ public class RoomEscapeRobot extends Robot {
 			findAndFollowWall();
 		}
 	}
-
+	
 	public static void main(String[] args) {
 		Window window = Window.runTests(50,
 			new World(path("room.kzw")).add(new RoomEscapeRobot(9, 2, UP)),
@@ -120,9 +120,9 @@ public class RoomEscapeRobot extends Robot {
 			new World(path("room-small.kzw")).add(new RoomEscapeRobot(10, 8, RIGHT)),
 			new World(path("room-hall.kzw")).add(new RoomEscapeRobot(10, 7, LEFT))
 			);
-
+		
 		window.setDelay(10);
-
+		
 		while (true) {
 			window.runTest(500, new World(path("room.kzw")).add(new RoomEscapeRobot(Util.random(3, 15), Util.random(2, 14), Util.randomDirection())));
 		}

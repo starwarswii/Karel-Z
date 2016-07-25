@@ -6,23 +6,23 @@ import java.awt.Color;
 import karelz.*;
 
 public class TestRobot extends Robot {
-
+	
 	public TestRobot(int x, int y, Direction direction, int beepers, Color color) {
 		super(x, y, direction, beepers, color);
 	}
-
+	
 	public TestRobot(int x, int y, Direction direction, Color color) {
 		super(x, y, direction, color);
 	}
-
+	
 	public TestRobot(int x, int y, Direction direction, int beepers) {
 		super(x, y, direction, beepers);
 	}
-
+	
 	public TestRobot(int x, int y, Direction direction) {
 		super(x, y, direction);
 	}
-
+	
 	public void task() throws EndTaskException {
 		turnLeft();
 		move();
@@ -39,10 +39,10 @@ public class TestRobot extends Robot {
 	
 	public static void main(String[] args) {
 		World world = new World(path("test.kzw"));
-
+		
 		world.add(new TestRobot(5, 6, RIGHT).withLogging());
 		world.add(new TestRobot(3, 4, UP).withLogging());
-
+		
 		Window window = new Window(world, 100, true, true, 500);
 		window.setVisible(true);
 		Util.sleep(5000);
