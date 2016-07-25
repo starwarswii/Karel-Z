@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * A {@code Cell} object represents a single square in a world, and the fixed objects inside of it. These include walls and beepers, but not robots.
  * <br>Although there is nothing prohibiting it, by convention a cell should hold
- * (nothing) <b>OR</b> (any combination of a beeper pile, horizontal wall, or vertical wall), <b>OR</b> (only a block wall)t
+ * (nothing) <b>OR</b> (any combination of a beeper pile, horizontal wall, or vertical wall), <b>OR</b> (only a block wall).
  */
 public class Cell {
 	
