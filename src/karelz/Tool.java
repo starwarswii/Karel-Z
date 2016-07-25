@@ -184,7 +184,7 @@ public enum Tool {//TODO add a "place robot" tool?
 	/**
 	 * Instantiates a new tool with an image overlay that has no selector and has no world modifier.
 	 * <br>This constructor is used to create the {@link #PAN_AND_ZOOM} tool as it needs no selector
-	 * and all the functions are contained within the {@code ZoomAndPanPanel} the world is drawn on.
+	 * and all the functions are contained within the {@code PanAndZoomPanel} the world is drawn on.
 	 *
 	 * @param imageOverlay the image overlay
 	 * @param toolTip the tool tip

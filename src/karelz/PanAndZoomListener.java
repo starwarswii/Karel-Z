@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
  * The {@code PanAndZoomListener} object is used by {@code PanAndZoomPanel} objects to handle panning and zooming using the mouse.
  * It supports left click and drag to pan, right click to reset, and scroll wheel to zoom.
  * 
- * @see ZoomAndPanPanel
+ * @see PanAndZoomPanel
  */
 public class PanAndZoomListener extends MouseAdapter {
 	
@@ -205,7 +205,7 @@ public class PanAndZoomListener extends MouseAdapter {
 	/**
 	 * Sets weather or not zooming and panning is enabled. This is used to disable zooming and panning when other {@code Tools} are being used.
 	 *
-	 * @param enabled
+	 * @param enabled the new enabled value
 	 */
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;

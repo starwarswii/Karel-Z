@@ -43,7 +43,7 @@ public class WorldColorCollection {
 	 * Constructs and returns a new {@code WorldColorCollection} with the default color values.
 	 * Because this is a new object, the colors in it can be modified without worry of changing the default color values.
 	 * <p>The default color values are below.
-	 * <table border=1>
+	 * <table border=1 summary="Default Color Values">
 	 * <tr><th>Color Name				</th><th>Default Value</th></tr>
 	 * <tr><td>{@code wallColor}		</td><td>{@link Color#BLACK}</td></tr>
 	 * <tr><td>{@code beeperColor}		</td><td>{@link Color#BLACK}</td></tr>

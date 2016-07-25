@@ -16,6 +16,8 @@ hs_err_pid*
 *.classpath
 *.project
 
-# the bin folder
+# folders to ignore
 bin/
+doc/
+
 *.db

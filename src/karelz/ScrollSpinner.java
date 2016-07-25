@@ -6,7 +6,7 @@ import javax.swing.SpinnerModel;
 import javax.swing.text.DefaultFormatter;
 
 /**
- * The {@code ScrollSpinner} is an improvement on the {@JSpinner},
+ * The {@code ScrollSpinner} is an improvement on the {@code JSpinner},
  * adding support for changing values via scrolling the mouse scroll wheel over the spinner, as well as other small tweaks.
  * These tweaks include allowing easy access to changing the {@code commitsOnValidEdit} property and removing comma number formatting.
  * 

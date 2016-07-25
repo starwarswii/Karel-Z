@@ -26,6 +26,7 @@ public class PanAndZoomPanel extends JPanel {
 	/**
 	 * Instantiates a new pan and zoom panel with the default zoom and transform values.
 	 *
+	 * @param paintStrategy the paint strategy to use when painting
 	 * @see #paintComponent(Graphics)
 	 * @see PaintStrategy
 	 */
@@ -60,7 +61,7 @@ public class PanAndZoomPanel extends JPanel {
 	/**
 	 * Paints this component using its {@code PaintStrategy}.
 	 * <p>{@inheritDoc}
-	 * @see JComponent#paintComponent(Graphics)
+	 * @see javax.swing.JComponent#paintComponent(Graphics)
 	 */
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
