@@ -6,9 +6,9 @@ A vast improvement on [Karel J Robot](https://csis.pace.edu/~bergin/KarelJava2ed
 
 When first working with Karel J Robot, the Java Implementation of the [Karel programming language](https://en.wikipedia.org/wiki/Karel_\(programming_language\)), It left a lot to be desired. At it's core, it was not very flexible, didnt follow many Object Oriented Programming conventions, and had poor editor support. additionally, it just wasnt capible of running fast enough for more complicated programs. Initally, I considdered tweaking the code here and there to achieve what I wanted out of it, but I found too many changes I wanted to make. In the end, I started from scratch and rewrote everything.
 
-#Improvements and Changes from Karel J Robot
+# Improvements and Changes from Karel J Robot
 
-Big Improvements:
+## Big Improvements
 * Everything has been 'OOPified" and is much more object oriented, with less static calls underneath
 * The simulation can be run much faster, and includes an 'Overdrive' setting for long-executing programs
 * Improved Player and Editor
@@ -28,12 +28,12 @@ Big Improvements:
 * Very thorough JavaDoc documentation In all areas for easy understandability
 * Support for running multiple worlds/tests in sequence, including generated worlds
 
-New World File Format (.kzw):
+## New World File Format (.kzw)
 * Designed to be much more simpler, processable, and human readable
 * World colors are now stored in the world file itself
 * The editor will load and sconvert files with the old world format (.kwld) to the new one for easy transition
 
-Programming Related Changes:
+## Programming Related Changes
 * New `SuperRobot` class, a more advanced robot
   * Can turn right and turn around
   * Can teleport to an arbitrary spot
@@ -44,7 +44,7 @@ Programming Related Changes:
 * Worlds are easily editable with code
 * Most method names are identical or very similar to the old format, making transferring Karel J Robot code to Karel-Z very easy with only minimal tweaking
 
-Miscellaneous Changes and Improvements:
+## Miscellaneous Changes and Improvements
 * Street/Avenue System is changed to x, y
 * Indexing starts at 0 instead of 1
 * Positions are now marked in the boxes instead of on the lines
