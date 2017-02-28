@@ -9,7 +9,7 @@ A vast improvement on [Karel J Robot](https://csis.pace.edu/~bergin/KarelJava2ed
 * [Table of Contents](#table-of-contents)
 * [Improvements and Changes from Karel J Robot](#improvements-and-changes-from-karel-j-robot)
   * [Big Improvements](#big-improvements)
-  * [New World File Format (.kzw)](#new-world-file-format-\(\.kzw\))
+  * [New World File Format (.kzw)](#new-world-file-format-kzw)
   * [Programming Related Changes](#programming-related-changes)
   * [Miscellaneous Changes and Improvements](#miscellaneous-changes-and-improvements)
 * [Examples](#examples)
