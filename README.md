@@ -7,12 +7,15 @@ A vast improvement on [Karel J Robot](https://csis.pace.edu/~bergin/KarelJava2ed
 ### Table of Contents
 * [Karel-Z](#karel-z)
 * [Table of Contents](#table-of-contents)
+* [Introduction](#introduction)
 * [Improvements and Changes from Karel J Robot](#improvements-and-changes-from-karel-j-robot)
   * [Big Improvements](#big-improvements)
   * [New World File Format (.kzw)](#new-world-file-format-kzw)
   * [Programming Related Changes](#programming-related-changes)
   * [Miscellaneous Changes and Improvements](#miscellaneous-changes-and-improvements)
 * [Examples](#examples)
+
+# Introduction
 
 When first working with Karel J Robot, the Java Implementation of the [Karel programming language](https://en.wikipedia.org/wiki/Karel_\(programming_language\)), It left a lot to be desired. At its core, it was not very flexible, didn’t follow many Object Oriented Programming conventions, and had poor editor support. Additionally, it just wasn’t capable of running fast enough for more complicated programs. Initially, I considered tweaking the code here and there to achieve what I wanted out of it, but I found too many changes I wanted to make. In the end, I started from scratch and rewrote everything.
 
